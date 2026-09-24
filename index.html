@@ -87,6 +87,39 @@ body.dark .list-date{background:#25292f}
 body.dark .donut:after{background:var(--bg)}
 body.dark .close,body.dark .btn-soft{background:#2b3037;color:#eee}
 </style>
+
+<style id="phone-layout-on-desktop">
+/* Giữ nguyên bố cục điện thoại kể cả khi mở trên máy tính */
+@media (min-width:700px){
+  body{
+    background:#eef0f3 !important;
+    padding-bottom:88px !important;
+  }
+  .app{
+    width:430px !important;
+    max-width:430px !important;
+    margin:0 auto !important;
+    min-height:100vh !important;
+    background:var(--bg) !important;
+    box-shadow:0 0 28px rgba(16,24,40,.10);
+  }
+  nav{
+    left:50% !important;
+    right:auto !important;
+    width:430px !important;
+    transform:translateX(-50%) !important;
+  }
+  .screen-head{
+    position:sticky !important;
+    top:0 !important;
+  }
+  .modal .sheet{
+    width:430px !important;
+    max-width:430px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="app">

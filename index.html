@@ -6,7 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050a07">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23050a07%22%2F%3E%3Crect%20x%3D%2212%22%20y%3D%2218%22%20width%3D%2240%22%20height%3D%2230%22%20rx%3D%227%22%20fill%3D%22%2312331f%22%20stroke%3D%22%2343ff72%22%20stroke-width%3D%223%22%2F%3E%3Cpath%20d%3D%22M38%2028h14v12H38z%22%20fill%3D%22%2343ff72%22%2F%3E%3Ccircle%20cx%3D%2243%22%20cy%3D%2234%22%20r%3D%222%22%20fill%3D%22%23050a07%22%2F%3E%3C%2Fsvg%3E">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=1">
+<link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png?v=1">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Thu chi">
 <meta name="description" content="Quản lý thu chi, chấm công, tiền lương và ngân sách cá nhân.">
 <title>Thu chi & Chấm công</title>
 <style>
@@ -394,6 +397,65 @@ body.dark .all-budget-btn{background:var(--accent-soft);color:var(--accent)}
 }
 </style>
 
+<style id="entry-date-picker-css">
+.entry-date-btn{
+  border:0 !important;
+  font-family:inherit;
+  font-weight:700 !important;
+  cursor:pointer !important;
+  min-width:0 !important;
+}
+.entry-date-btn:active{transform:scale(.99)}
+.entry-date-picker-sheet{padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.entry-date-picker-grid{
+  display:grid;
+  grid-template-columns:.85fr 1fr 1.15fr;
+  gap:8px;
+  padding:10px 14px 4px;
+}
+.entry-date-picker-col{min-width:0}
+.entry-date-picker-label{
+  text-align:center;
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.entry-date-picker-col select{
+  width:100%;
+  height:224px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+  color:var(--text);
+  font-size:18px;
+  font-weight:650;
+  text-align:center;
+  padding:4px 2px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.entry-date-picker-col option{
+  padding:8px 2px;
+  min-height:38px;
+}
+
+.entry-date-picker-col select:focus{border-color:var(--accent)}
+.entry-date-picker-col option:checked{background:var(--accent);color:var(--on-accent)}
+</style>
+
+
+<style id="report-chart-colors">
+.donut{box-shadow:0 0 0 1px var(--line)}
+.report-list .rrow{grid-template-columns:12px 28px minmax(0,1fr) auto;gap:9px;padding:14px 18px}
+.report-swatch{display:block;width:12px;height:12px;border-radius:4px;background:var(--slice-color);box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.report-list .ricon{font-size:22px;text-align:center}
+.report-list .rname{font-size:16px;line-height:1.4;overflow-wrap:anywhere;min-width:0}
+.report-figures{text-align:right;min-width:0}
+.report-figures .rval{font-size:16px;line-height:1.4;font-variant-numeric:tabular-nums}
+.report-figures .rpct{width:auto;font-size:14px;margin-top:3px;font-variant-numeric:tabular-nums}
+@media(max-width:360px){.report-list .rrow{padding:12px;gap:7px;grid-template-columns:12px 24px minmax(0,1fr) auto}.report-figures .rval{font-size:14px}}
+</style>
+
 </head>
 <body class="dark">
 <div class="app">
@@ -411,7 +473,7 @@ body.dark .all-budget-btn{background:var(--accent-soft);color:var(--accent)}
     <div class="form-row entry-date-row">
       <div class="row-label">Ngày</div>
       <button class="arrow-btn" id="entryPrevDay" aria-label="Ngày trước">‹</button>
-      <div class="date-box" id="entryDateLabel"></div>
+      <button type="button" class="date-box entry-date-btn" id="entryDateLabel" aria-label="Chọn ngày tháng năm" aria-haspopup="dialog" aria-controls="entryDatePickerModal"></button>
       <button class="arrow-btn" id="entryNextDay" aria-label="Ngày sau">›</button>
     </div>
     <div class="form-row" style="grid-template-columns:118px 1fr">
@@ -550,6 +612,31 @@ body.dark .all-budget-btn{background:var(--accent-soft);color:var(--accent)}
     <div class="modal-field"><label>Giá trị</label><input id="budgetValue" inputmode="decimal"></div>
   </div>
   <div class="modal-actions"><button class="btn btn-red" id="deleteBudget">Xóa</button><button class="btn btn-soft" id="budgetMoveUp">↑</button><button class="btn btn-soft" id="budgetMoveDown">↓</button><button class="btn btn-orange" id="saveBudget">Lưu</button></div>
+</div></div>
+
+<div class="modal" id="entryDatePickerModal"><div class="sheet entry-date-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="entryDatePickerTitle">
+  <div class="sheet-head">
+    <b id="entryDatePickerTitle">Chọn ngày</b>
+    <button class="close" type="button" data-close="entryDatePickerModal" aria-label="Đóng chọn ngày">×</button>
+  </div>
+  <div class="entry-date-picker-grid">
+    <div class="entry-date-picker-col">
+      <div class="entry-date-picker-label">Ngày</div>
+      <select id="entryPickerDay" size="7" aria-label="Chọn ngày"></select>
+    </div>
+    <div class="entry-date-picker-col">
+      <div class="entry-date-picker-label">Tháng</div>
+      <select id="entryPickerMonth" size="7" aria-label="Chọn tháng"></select>
+    </div>
+    <div class="entry-date-picker-col">
+      <div class="entry-date-picker-label">Năm</div>
+      <select id="entryPickerYear" size="7" aria-label="Chọn năm"></select>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn btn-soft" data-close="entryDatePickerModal">Hủy</button>
+    <button class="btn btn-orange" id="applyEntryDatePicker">Xong</button>
+  </div>
 </div></div>
 
 <script>
@@ -911,6 +998,60 @@ function bindMoneyInput(el){
  el.addEventListener("input",()=>{const raw=String(el.value||"").replace(/[^\d]/g,""),n=Number(raw)||0;el.value=n?new Intl.NumberFormat("vi-VN").format(n):""});
 }
 
+function refreshEntryPickerDays(preferredDay){
+ const daySel=$("entryPickerDay");
+ const month=Number($("entryPickerMonth").value)||1;
+ const year=Number($("entryPickerYear").value)||new Date().getFullYear();
+ const max=dim(year,month-1);
+ const keep=Math.min(Math.max(1,Number(preferredDay)||Number(daySel.value)||1),max);
+ daySel.innerHTML=Array.from({length:max},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
+ daySel.value=String(keep);
+}
+function openEntryDatePicker(){
+ const d=dateFromKey(entryDate);
+ const daySel=$("entryPickerDay"),monthSel=$("entryPickerMonth"),yearSel=$("entryPickerYear");
+
+ monthSel.innerHTML=Array.from({length:12},(_,i)=>`<option value="${i+1}">Tháng ${i+1}</option>`).join("");
+
+ const currentYear=d.getFullYear();
+ const minYear=Math.min(1990,currentYear-30);
+ const maxYear=Math.max(2100,currentYear+30);
+ yearSel.innerHTML=Array.from({length:maxYear-minYear+1},(_,i)=>{
+   const y=minYear+i;
+   return `<option value="${y}">${y}</option>`;
+ }).join("");
+
+ monthSel.value=String(d.getMonth()+1);
+ yearSel.value=String(currentYear);
+ refreshEntryPickerDays(d.getDate());
+ daySel.value=String(d.getDate());
+
+ $("entryDatePickerModal").classList.add("open");
+
+ requestAnimationFrame(()=>{
+   [daySel,monthSel,yearSel].forEach(sel=>{
+     const opt=sel.options[sel.selectedIndex];
+     if(opt)opt.scrollIntoView({block:"center"});
+   });
+ });
+}
+function applyEntryDatePicker(){
+ const day=Number($("entryPickerDay").value)||1;
+ const month=Math.max(1,Math.min(12,Number($("entryPickerMonth").value)||1));
+ const year=Number($("entryPickerYear").value)||new Date().getFullYear();
+ const safeDay=Math.min(day,dim(year,month-1));
+
+ entryDate=dkey(year,month-1,safeDay);
+ selectedWorkDay=entryDate;
+
+ if(entryMode==="income"&&selectedCategoryId==="salary"){
+   workCursor=new Date(year,month-1,1);
+ }
+
+ closeModal("entryDatePickerModal");
+ renderEntry();
+}
+
 function renderEntry(){
  $("modeIncome").classList.toggle("active",entryMode==="income");
  $("modeExpense").classList.toggle("active",entryMode==="expense");
@@ -1100,6 +1241,17 @@ function reportBreakdown(type){
  }
  return [...map.values()].sort((a,b)=>b.amount-a.amount);
 }
+function reportColorsFor(items,type){
+ const palette=["#45f078","#48d9ef","#b89aff","#ffc66d","#ff829b","#75aeff","#ec93e8","#d7ee70","#56d3b3","#d9bfff","#ffa675","#bccbd5"];
+ // Include all known categories so changing period or amount order keeps the same colors.
+ const names=[...(type==="income"?["Tiền lương","OT","Công tác phí","Đi lại","Income thêm"]:[]),
+   ...(data.categories[type]||[]).map(c=>c.name),
+   ...data.transactions.filter(t=>t.type===type).map(t=>t.categoryName),
+   ...items.map(x=>x.name)];
+ const unique=[...new Set(names.filter(Boolean))].sort((a,b)=>a.localeCompare(b,"vi"));
+ const colors=new Map(unique.map((name,i)=>[name,i<palette.length?palette[i]:`hsl(${((i-palette.length)*137.508+18)%360}, 76%, ${64+((i-palette.length)%3)*7}%)`]));
+ return items.map(x=>({...x,chartColor:colors.get(x.name)||palette[0]}));
+}
 function renderReport(){
  $("reportMonthly").classList.toggle("active",reportMode==="month");$("reportYearly").classList.toggle("active",reportMode==="year");
  $("reportPeriodLabel").textContent=reportMode==="month"?pad(reportCursor.getMonth()+1)+"/"+reportCursor.getFullYear():String(reportCursor.getFullYear());
@@ -1110,11 +1262,19 @@ function renderReport(){
  const net=income-expense;
  $("reportNet").textContent=(net>=0?"+":"")+money(net);
  $("reportTabIncome").classList.toggle("active",reportTab==="income");$("reportTabExpense").classList.toggle("active",reportTab==="expense");
- const items=reportBreakdown(reportTab),total=items.reduce((s,x)=>s+x.amount,0);
- if(total<=0){$("reportDonut").style.background="var(--soft)";$("reportList").innerHTML='<div class="empty">Chưa có dữ liệu</div>';return}
- const chartColors=["#43ff72","#20c997","#9af552","#0f8f64","#94e2c7","#397c3b","#d0f7a6","#47b7a1"];
- let acc=0;const stops=items.map((x,i)=>{const s=acc,e=acc+x.amount/total*100;acc=e;return `${chartColors[i%chartColors.length]} ${s}% ${e}%`});$("reportDonut").style.background="conic-gradient("+stops.join(",")+")";
- $("reportList").innerHTML=items.map(x=>`<div class="rrow"><div class="ricon">${esc(x.icon)}</div><div class="rname">${esc(x.name)}</div><div class="rval">${money(x.amount)}</div><div class="rpct">${(x.amount/total*100).toFixed(1)} %</div><div class="tx-arrow">›</div></div>`).join("");
+ const items=reportColorsFor(reportBreakdown(reportTab),reportTab),total=items.reduce((sum,x)=>sum+x.amount,0);
+ const donut=$("reportDonut");
+ donut.setAttribute("role","img");
+ donut.setAttribute("aria-label",total>0?"Biểu đồ "+(reportTab==="income"?"thu nhập":"chi tiêu")+". Chi tiết và chú thích màu ở danh sách bên dưới.":"Biểu đồ chưa có dữ liệu");
+ if(total<=0){donut.style.background="var(--soft)";$("reportList").innerHTML='<div class="empty">Chưa có dữ liệu</div>';return}
+ let acc=0;
+ const stops=items.flatMap(x=>{
+   const start=acc,end=start+x.amount/total*100;acc=end;
+   const gap=items.length>1?Math.min(.3,(end-start)*.1):0;
+   return gap?[`${x.chartColor} ${start}% ${end-gap}%`,`var(--bg) ${end-gap}% ${end}%`]:[`${x.chartColor} ${start}% ${end}%`];
+ });
+ donut.style.background="conic-gradient("+stops.join(",")+")";
+ $("reportList").innerHTML=items.map(x=>`<div class="rrow"><span class="report-swatch" style="--slice-color:${x.chartColor}" aria-hidden="true"></span><div class="ricon" aria-hidden="true">${esc(x.icon)}</div><div class="rname">${esc(x.name)}</div><div class="report-figures"><div class="rval">${money(x.amount)}</div><div class="rpct">${(x.amount/total*100).toFixed(1)} %</div></div></div>`).join("");
 }
 
 function fundAmount(f,income){return f.mode==="percent"?income*(Number(f.percent)||0)/100:parseMoney(f.amount)}
@@ -1413,6 +1573,10 @@ $("modeIncome").onclick=()=>{entryMode="income";selectedCategoryId="salary";rend
 $("modeExpense").onclick=()=>{entryMode="expense";selectedCategoryId=(fundsForMonth(entryDate.slice(0,7))[0]||{}).id||"";renderEntry()};
 $("entryPrevDay").onclick=()=>{entryDate=shiftDate(entryDate,-1);selectedWorkDay=entryDate;renderEntry()};
 $("entryNextDay").onclick=()=>{entryDate=shiftDate(entryDate,1);selectedWorkDay=entryDate;renderEntry()};
+$("entryDateLabel").onclick=openEntryDatePicker;
+$("entryPickerMonth").onchange=()=>refreshEntryPickerDays();
+$("entryPickerYear").onchange=()=>refreshEntryPickerDays();
+$("applyEntryDatePicker").onclick=applyEntryDatePicker;
 $("entrySubmit").onclick=addEntry;
 $("entryAllBudget").onclick=fillAllBudget;
 $("manageCatsTop").onclick=()=>{if(entryMode==="expense")switchPage("budget");else openCategoryManager()};

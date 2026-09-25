@@ -545,6 +545,7 @@ body.dark .all-budget-btn{background:var(--accent-soft);color:var(--accent)}
     <div class="report-tabs"><button id="reportTabExpense" class="active">Chi tiêu</button><button id="reportTabIncome">Thu nhập</button></div>
   </div>
   <div class="donut" id="reportDonut"></div>
+  <div id="reportChartNote" style="text-align:center;font-size:14px;color:var(--muted);padding:4px 18px 14px" hidden></div>
   <div class="report-list" id="reportList"></div>
 </section>
 
@@ -1236,7 +1237,7 @@ function reportBreakdown(type){
    data.transactions.filter(t=>t.type==="income"&&keys.includes(t.date.slice(0,7))).forEach(t=>{const c=getCategory("income",t.categoryId);add(t.categoryName,c?.icon||"💰",c?.color||"#45a8ef",t.amount)});
  }else{
    data.transactions
-     .filter(t=>t.type==="expense"&&keys.includes(t.date.slice(0,7))&&!isReserveTransaction(t))
+     .filter(t=>t.type==="expense"&&keys.includes(t.date.slice(0,7)))
      .forEach(t=>{const c=getCategory("expense",t.categoryId,t.date);add(t.categoryName,c?.icon||"🧾",c?.color||"#ff7900",t.amount)});
  }
  return [...map.values()].sort((a,b)=>b.amount-a.amount);
@@ -1263,9 +1264,12 @@ function renderReport(){
  $("reportNet").textContent=(net>=0?"+":"")+money(net);
  $("reportTabIncome").classList.toggle("active",reportTab==="income");$("reportTabExpense").classList.toggle("active",reportTab==="expense");
  const items=reportColorsFor(reportBreakdown(reportTab),reportTab),total=items.reduce((sum,x)=>sum+x.amount,0);
+ const chartNote=$("reportChartNote");
+ chartNote.hidden=reportTab!=="expense";
+ chartNote.textContent=reportTab==="expense"?"Tổng chi & để dành: "+money(total):"";
  const donut=$("reportDonut");
  donut.setAttribute("role","img");
- donut.setAttribute("aria-label",total>0?"Biểu đồ "+(reportTab==="income"?"thu nhập":"chi tiêu")+". Chi tiết và chú thích màu ở danh sách bên dưới.":"Biểu đồ chưa có dữ liệu");
+ donut.setAttribute("aria-label",total>0?"Biểu đồ "+(reportTab==="income"?"thu nhập":"chi tiêu và khoản để dành")+". Chi tiết và chú thích màu ở danh sách bên dưới.":"Biểu đồ chưa có dữ liệu");
  if(total<=0){donut.style.background="var(--soft)";$("reportList").innerHTML='<div class="empty">Chưa có dữ liệu</div>';return}
  let acc=0;
  const stops=items.flatMap(x=>{
@@ -1446,6 +1450,17 @@ function openBudgetModal(index){
  $("budgetMoveDown").style.visibility=isNew?"hidden":"visible";
  $("budgetModal").classList.add("open");
 }
+// Icon là thuộc tính chung của quỹ; hạn mức và tên vẫn được lưu theo tháng.
+function syncFundIcon(id,icon){
+ if(!id||!icon)return;
+ const update=arr=>{
+   if(!Array.isArray(arr))return;
+   arr.forEach(f=>{if(f&&f.id===id)f.icon=icon});
+ };
+ update(data.funds);
+ Object.values(data.budgetMonths||{}).forEach(update);
+ update(data.categories.expense);
+}
 function saveBudgetEdit(){
  const mk=mkey(budgetCursor.getFullYear(),budgetCursor.getMonth());
  const arr=ensureBudgetMonth(mk);
@@ -1483,6 +1498,8 @@ function saveBudgetEdit(){
    }
  }
 
+ const savedFund=arr[editingBudgetIndex<0?arr.length-1:editingBudgetIndex];
+ syncFundIcon(savedFund.id,savedFund.icon);
  save();
  closeModal("budgetModal");
  renderAll();

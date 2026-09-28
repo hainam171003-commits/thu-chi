@@ -657,8 +657,9 @@ body.dark .calc-grid button{background:#171a1e}
     <div class="report-toggle"><button id="reportMonthly" class="active">Hàng Tháng</button><button id="reportYearly">Hàng Năm</button></div>
     <div style="margin-top:12px" class="month-nav"><button id="reportPrev">‹</button><div class="month-label" id="reportPeriodLabel"></div><button id="reportNext">›</button></div>
     <div class="report-cards">
-      <div class="report-mini"><span class="lbl">Chi tiêu</span><span class="val expense-color" id="reportExpense">0đ</span></div>
+      <div class="report-mini"><span class="lbl">Ngân sách</span><span class="val" id="reportBudget">0đ</span></div>
       <div class="report-mini"><span class="lbl">Thu nhập</span><span class="val income-color" id="reportIncome">0đ</span></div>
+      <div class="report-mini full"><span class="lbl">Chi tiêu</span><span class="val expense-color" id="reportExpense">0đ</span></div>
       <div class="report-mini full"><span class="lbl">Đang còn</span><span class="val" id="reportNet">0đ</span></div>
       <div class="report-mini full"><span class="lbl">Để riêng</span><span class="val reserve-color" id="reportReserved">0đ</span></div>
     </div>
@@ -1545,17 +1546,49 @@ function reportColorsFor(items,type){
  const colors=new Map(unique.map((name,i)=>[name,i<palette.length?palette[i]:`hsl(${((i-palette.length)*137.508+18)%360}, 76%, ${64+((i-palette.length)%3)*7}%)`]));
  return items.map(x=>({...x,chartColor:colors.get(x.name)||palette[0]}));
 }
+
+function previousMonthKey(k){
+ const [y,mm]=k.split("-").map(Number);
+ const d=new Date(y,mm-2,1);
+ return mkey(d.getFullYear(),d.getMonth());
+}
+function reportBudgetState(k){
+ const current=monthTotals(k);
+ const previous=monthTotals(previousMonthKey(k));
+ const budget=previous.income;
+
+ let reserveBalance=0,reserveCommitted=0;
+ fundsForMonth(k).filter(isReserveFund).forEach(f=>{
+   const allocated=fundAmount(f,budget);
+   const spent=fundSpent(f,k);
+   reserveBalance+=Math.max(0,allocated-spent);
+   reserveCommitted+=Math.max(allocated,spent);
+ });
+
+ const expense=current.expense;
+ const remaining=budget-expense-reserveCommitted;
+ return {
+   budget,
+   income:current.income,
+   expense,
+   remaining,
+   reserveBalance
+ };
+}
+
 function renderReport(){
  $("reportMonthly").classList.toggle("active",reportMode==="month");$("reportYearly").classList.toggle("active",reportMode==="year");
  $("reportPeriodLabel").textContent=reportMode==="month"?pad(reportCursor.getMonth()+1)+"/"+reportCursor.getFullYear():String(reportCursor.getFullYear());
- let income=0,expense=0,reserveBalance=0,net=0;
+ let budget=0,income=0,expense=0,reserveBalance=0,net=0;
  reportKeys().forEach(k=>{
-   const t=monthTotals(k);
+   const t=reportBudgetState(k);
+   budget+=t.budget;
    income+=t.income;
    expense+=t.expense;
-   reserveBalance+=t.reserveBalance||0;
-   net+=t.net||0;
+   reserveBalance+=t.reserveBalance;
+   net+=t.remaining;
  });
+ $("reportBudget").textContent=money(budget);
  $("reportIncome").textContent="+"+money(income);
  $("reportExpense").textContent="-"+money(expense);
  $("reportNet").textContent=(net>=0?"+":"")+money(net);

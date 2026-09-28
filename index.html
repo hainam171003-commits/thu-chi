@@ -1558,26 +1558,93 @@ function previousMonthKey(k){
  const d=new Date(y,mm-2,1);
  return mkey(d.getFullYear(),d.getMonth());
 }
+
+function reserveFundKey(f){
+ return f&&f.id?"id:"+String(f.id):"name:"+normalizeFundName(f&&f.name);
+}
+function reserveActiveMonths(targetMk){
+ const set=new Set([targetMk]);
+ Object.keys(data.budgetMonths||{}).forEach(k=>{if(/^\d{4}-\d{2}$/.test(k))set.add(k)});
+ Object.keys(data.monthSalary||{}).forEach(k=>{if(/^\d{4}-\d{2}$/.test(k))set.add(k)});
+ Object.keys(data.extras||{}).forEach(k=>{if(/^\d{4}-\d{2}$/.test(k))set.add(k)});
+ Object.keys(data.days||{}).forEach(k=>{if(/^\d{4}-\d{2}-\d{2}$/.test(k))set.add(k.slice(0,7))});
+ (data.transactions||[]).forEach(t=>{if(t&&/^\d{4}-\d{2}-\d{2}$/.test(t.date||""))set.add(t.date.slice(0,7))});
+
+ const keys=[...set].sort();
+ if(!keys.length)return [targetMk];
+
+ const [sy,sm]=keys[0].split("-").map(Number);
+ const [ey,em]=keys[keys.length-1].split("-").map(Number);
+ const out=[];
+ let d=new Date(sy,sm-1,1),end=new Date(ey,em-1,1);
+ while(d<=end){
+   out.push(mkey(d.getFullYear(),d.getMonth()));
+   d=new Date(d.getFullYear(),d.getMonth()+1,1);
+ }
+ return out;
+}
+function reserveCarryLedger(targetMk){
+ const months=reserveActiveMonths(targetMk);
+ const lots=[];
+
+ months.forEach(k=>{
+   const income=monthAttendance(k).sum+monthManual(k,"income");
+   const funds=fundsForMonth(k).filter(isReserveFund);
+
+   // Chi tháng này chỉ trừ phần Để riêng của các tháng trước.
+   funds.forEach(f=>{
+     const key=reserveFundKey(f);
+     let spend=Math.max(0,fundSpent(f,k));
+     if(spend<=0)return;
+
+     for(const lot of lots){
+       if(lot.key!==key||lot.month>=k||lot.remaining<=0)continue;
+       const take=Math.min(lot.remaining,spend);
+       lot.remaining-=take;
+       spend-=take;
+       if(spend<=0)break;
+     }
+   });
+
+   // Sau đó mới tạo phần Để riêng của chính tháng này.
+   // Vì vậy chi trong tháng không tự trừ phần Để riêng mới của cùng tháng.
+   funds.forEach(f=>{
+     const key=reserveFundKey(f);
+     const allocated=Math.max(0,fundAmount(f,income));
+     lots.push({month:k,key,allocated,remaining:allocated});
+   });
+ });
+
+ const targetLots=new Map();
+ lots.filter(x=>x.month===targetMk).forEach(x=>targetLots.set(x.key,x));
+
+ // Để riêng tháng nào hiển thị đúng số dư của riêng tháng đó.
+ const targetBalance=lots
+   .filter(x=>x.month===targetMk)
+   .reduce((s,x)=>s+Math.max(0,x.remaining),0);
+
+ return {lots,targetLots,targetBalance};
+}
+
 function reportBudgetState(k){
  const current=monthTotals(k);
  const previous=monthTotals(previousMonthKey(k));
 
- // Ngân sách chi tiêu của tháng này = thu nhập của tháng trước.
+ // Ngân sách tháng này = thu nhập tháng trước.
  const budget=previous.income;
 
- // 3 quỹ Để riêng luôn thuộc đúng tháng đang xem.
- // Nếu quỹ đặt theo %, phần trăm được tính trên thu nhập của chính tháng đó.
- let reserveBalance=0;
- fundsForMonth(k).filter(isReserveFund).forEach(f=>{
-   const allocated=fundAmount(f,current.income);
-   const spent=fundSpent(f,k);
-   reserveBalance+=Math.max(0,allocated-spent);
- });
+ // Chi tiêu tháng này = toàn bộ chi thực tế, gồm cả 3 mục highlight.
+ const reserveExpense=fundsForMonth(k)
+   .filter(isReserveFund)
+   .reduce((s,f)=>s+fundSpent(f,k),0);
+ const expense=current.expense+reserveExpense;
 
- // Đang còn chỉ theo ngân sách chi tiêu (thu nhập tháng trước)
- // và các khoản chi tiêu thông thường. Để riêng không trừ vào đây.
- const expense=current.expense;
+ // Đang còn hoàn toàn độc lập với Để riêng.
  const remaining=budget-expense;
+
+ // Để riêng tháng nào là của chính tháng đó.
+ // Chi ở tháng sau có thể làm giảm số dư tháng cũ tương ứng.
+ const reserveBalance=reserveCarryLedger(k).targetBalance;
 
  return {
    budget,
@@ -1650,11 +1717,13 @@ function renderBudget(){
 
  let total=0,used=0;
  const monthFunds=fundsForMonth(mk);
+ const reserveCarry=reserveCarryLedger(mk);
  const rows=monthFunds.map((f,i)=>{
    const amount=fundAmount(f,income);
-   const spent=fundSpent(f,mk);
-   const left=amount-spent;
    const reserve=isReserveFund(f);
+   const reserveLot=reserve?reserveCarry.targetLots.get(reserveFundKey(f)):null;
+   const left=reserve?(reserveLot?Math.max(0,reserveLot.remaining):Math.max(0,amount)):amount-fundSpent(f,mk);
+   const spent=reserve?Math.max(0,amount-left):fundSpent(f,mk);
    // Travel / Tiết kiệm / Dự phòng là tiền đã để riêng:
    // bắt đầu đầy 100%, chỉ giảm khi có giao dịch chi đúng mục đó.
    const pct=amount>0
@@ -1918,7 +1987,7 @@ function moveBudget(dir){
 }
 
 function backup(){
- const payload={app:"ChamCongFinance",version:13,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
+ const payload={app:"ChamCongFinance",version:15,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
 }
 function restore(file){
  const r=new FileReader();r.onload=()=>{try{const obj=JSON.parse(String(r.result||"")),incoming=obj&&obj.data&&typeof obj.data==="object"?obj.data:obj;if(!incoming||typeof incoming!=="object")throw 0;if(!confirm("Khôi phục dữ liệu từ bản sao lưu này?"))return;data=normalizeData(incoming);bootstrapFundIcons();applyGlobalFundIcons();save();renderAll();alert("Đã khôi phục dữ liệu thành công.")}catch(e){alert("File sao lưu bị lỗi hoặc không đúng định dạng.")}};r.readAsText(file)

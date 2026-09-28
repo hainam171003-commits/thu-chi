@@ -575,6 +575,28 @@ body.dark .calc-grid button{background:#171a1e}
 }
 </style>
 
+
+<style id="budget-quarter-markers-css">
+.budget-row.quarter-budget-row .progress{
+  position:relative;
+}
+.budget-row.quarter-budget-row .progress::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(to right,
+      transparent 24.5%,
+      var(--bg) 24.5% 25.5%,
+      transparent 25.5% 49.5%,
+      var(--bg) 49.5% 50.5%,
+      transparent 50.5% 74.5%,
+      var(--bg) 74.5% 75.5%,
+      transparent 75.5%);
+}
+</style>
+
 </head>
 <body class="dark">
 <div class="app">
@@ -1146,9 +1168,13 @@ function reserveSummaryForMonth(k,income){
 }
 
 function monthManual(k,type){return data.transactions.filter(t=>t.type===type&&t.date.slice(0,7)===k).reduce((s,t)=>s+amountNumber(t.amount),0)}
+function incomeForMonth(k){
+ const a=monthAttendance(k);
+ return a.sum+monthManual(k,"income");
+}
 function monthTotals(k){
  const a=monthAttendance(k),manualIncome=monthManual(k,"income");
- const income=a.sum+manualIncome;
+ const income=incomeForMonth(k);
  const expense=actualExpenseForMonth(k);      // chỉ các khoản chi thông thường
  const reserve=reserveSummaryForMonth(k,income);
  const reserved=reservedForMonth(k);          // chi thực tế từ 3 quỹ, giữ để Lịch hiển thị dòng tiền
@@ -1558,6 +1584,11 @@ function previousMonthKey(k){
  const d=new Date(y,mm-2,1);
  return mkey(d.getFullYear(),d.getMonth());
 }
+function nextMonthKey(k){
+ const [y,mm]=k.split("-").map(Number);
+ const d=new Date(y,mm,1);
+ return mkey(d.getFullYear(),d.getMonth());
+}
 
 function reserveFundKey(f){
  return f&&f.id?"id:"+String(f.id):"name:"+normalizeFundName(f&&f.name);
@@ -1628,23 +1659,30 @@ function reserveCarryLedger(targetMk){
 
 function reportBudgetState(k){
  const current=monthTotals(k);
- const previous=monthTotals(previousMonthKey(k));
+ const budgetKey=previousMonthKey(k);
 
- // Ngân sách tháng này = thu nhập tháng trước.
- const budget=previous.income;
+ // Ngân sách dùng trong tháng đang xem = Thu nhập tháng trước.
+ const budget=incomeForMonth(budgetKey);
 
- // Chi tiêu tháng này = toàn bộ chi thực tế, gồm cả 3 mục highlight.
+ // "Chi tiêu" vẫn hiển thị toàn bộ giao dịch chi của tháng đang xem,
+ // gồm cả khoản chi từ Tiết kiệm / Travel / Dự phòng.
  const reserveExpense=fundsForMonth(k)
    .filter(isReserveFund)
    .reduce((s,f)=>s+fundSpent(f,k),0);
  const expense=current.expense+reserveExpense;
 
- // Đang còn hoàn toàn độc lập với Để riêng.
- const remaining=budget-expense;
+ // Ô Để riêng của tháng nào hiển thị đúng quỹ của tháng đó.
+ // Chi Để riêng ở tháng sau sẽ tự làm giảm số dư tháng trước.
+ // Ví dụ chi Dự phòng trong 09/2026 -> Để riêng 08/2026 giảm.
+ const reserveBalance=reserveBalanceForBudgetMonth(k);
 
- // Để riêng tháng nào là của chính tháng đó.
- // Chi ở tháng sau có thể làm giảm số dư tháng cũ tương ứng.
- const reserveBalance=reserveCarryLedger(k).targetBalance;
+ // "Đang còn" = phần tiền tự do sau khi đã tách Để riêng,
+ // trừ chi tiêu thường và trừ tiếp mọi khoản thực chi từ 3 quỹ Để riêng.
+ // Vì vậy nếu đang còn 20.000đ mà chi thêm 500.000đ từ Tiết kiệm
+ // thì "Đang còn" sẽ thành -480.000đ.
+ const reserveAllocated=reserveAllocatedForMonth(budgetKey);
+ const baseRemaining=budget-reserveAllocated-current.expense;
+ const remaining=baseRemaining-reserveExpense;
 
  return {
    budget,
@@ -1711,28 +1749,72 @@ function fundSpent(f,mk){
 
  return txs.reduce((s,t)=>s+amountNumber(t.amount),0);
 }
+function budgetFundSpent(f,budgetMk){
+ const spendMk=nextMonthKey(budgetMk);
+ return data.transactions
+   .filter(t=>{
+     if(t.type!=="expense"||t.date.slice(0,7)!==spendMk)return false;
+     if(t.categoryId===f.id)return true;
+     return normalizeFundName(t.categoryName)===normalizeFundName(f.name);
+   })
+   .reduce((s,t)=>s+amountNumber(t.amount),0);
+}
+function budgetMonthSpent(budgetMk){
+ const spendMk=nextMonthKey(budgetMk);
+ return data.transactions
+   .filter(t=>t.type==="expense"&&t.date.slice(0,7)===spendMk)
+   .reduce((s,t)=>s+amountNumber(t.amount),0);
+}
+function budgetNormalSpent(budgetMk){
+ const spendMk=nextMonthKey(budgetMk);
+ return actualExpenseForMonth(spendMk);
+}
+function reserveBalanceForBudgetMonth(budgetMk){
+ const income=incomeForMonth(budgetMk);
+ return fundsForMonth(budgetMk)
+   .filter(isReserveFund)
+   .reduce((s,f)=>{
+     const amount=fundAmount(f,income);
+     const spent=budgetFundSpent(f,budgetMk);
+     return s+Math.max(0,amount-spent);
+   },0);
+}
+function reserveAllocatedForMonth(mk){
+ const income=incomeForMonth(mk);
+ return fundsForMonth(mk)
+   .filter(isReserveFund)
+   .reduce((s,f)=>s+Math.max(0,fundAmount(f,income)),0);
+}
+
+function isQuarterMarkedFund(f){
+ const n=normalizeFundName(f&&f.name);
+ return n==="date"||n==="xang dau";
+}
+
 function renderBudget(){
- const y=budgetCursor.getFullYear(),m=budgetCursor.getMonth(),mk=mkey(y,m),income=monthTotals(mk).income;
+ const y=budgetCursor.getFullYear(),m=budgetCursor.getMonth(),mk=mkey(y,m);
+ const currentIncome=incomeForMonth(mk);
  $("budgetMonthLabel").textContent=pad(m+1)+"/"+y+" (01/"+pad(m+1)+" – "+pad(dim(y,m))+"/"+pad(m+1)+")";
 
- let total=0,used=0;
+ let allocatedTotal=0;
  const monthFunds=fundsForMonth(mk);
- const reserveCarry=reserveCarryLedger(mk);
  const rows=monthFunds.map((f,i)=>{
-   const amount=fundAmount(f,income);
    const reserve=isReserveFund(f);
-   const reserveLot=reserve?reserveCarry.targetLots.get(reserveFundKey(f)):null;
-   const left=reserve?(reserveLot?Math.max(0,reserveLot.remaining):Math.max(0,amount)):amount-fundSpent(f,mk);
-   const spent=reserve?Math.max(0,amount-left):fundSpent(f,mk);
+   const amount=fundAmount(f,currentIncome);
+
+   // Toàn bộ chi tiêu của tháng SAU được ghi nhận vào ngân sách của tháng này.
+   // Ví dụ: giao dịch 09/2026 chỉ làm giảm ngân sách 08/2026.
+   const spent=budgetFundSpent(f,mk);
+   const left=amount-spent;
    // Travel / Tiết kiệm / Dự phòng là tiền đã để riêng:
    // bắt đầu đầy 100%, chỉ giảm khi có giao dịch chi đúng mục đó.
    const pct=amount>0
      ?Math.min(100,Math.max(0,(reserve?Math.max(0,left):spent)/amount*100))
      :0;
-   total+=amount;
-   used+=reserve?amount:spent;
+   allocatedTotal+=amount;
 
-   return `<div class="budget-row ${reserve?"reserve-budget-row":""}" data-budget="${i}">
+   const quarterMarked=isQuarterMarkedFund(f);
+   return `<div class="budget-row ${reserve?"reserve-budget-row":""} ${quarterMarked?"quarter-budget-row":""}" data-budget="${i}">
      <div class="budget-row-top">
        <div class="budget-icon">${esc(f.icon||"💼")}</div>
        <div>
@@ -1762,19 +1844,33 @@ function renderBudget(){
 
  $("budgetList").innerHTML=rows||'<div class="empty">Chưa có ngân sách</div>';
 
- const totalPct=total>0?Math.min(100,used/total*100):0;
- $("budgetTotalBar").style.width=totalPct+"%";
- $("budgetTotalValue").textContent=total?money(used)+" / "+money(total):"Chưa đặt";
+ const reserveAllocated=reserveAllocatedForMonth(mk);
+ const normalSpent=budgetNormalSpent(mk);
+ const ordinaryPool=currentIncome-reserveAllocated;
+ const ordinaryLeft=ordinaryPool-normalSpent;
+ const usedTotal=reserveAllocated+normalSpent;
 
- const totalLeft=total-used;
- $("budgetTotalUsed").textContent=total
-   ?(totalLeft>=0?"Còn lại "+money(totalLeft):"Vượt "+money(Math.abs(totalLeft)))
-   :"Đã dùng 0đ";
+ // Tổng ngân sách: hiển thị số đã sử dụng / tổng tiền của tháng.
+ // "Còn lại" chỉ là phần tiền chi tiêu bình thường, không cộng số dư Để riêng.
+ const totalUsedPct=currentIncome>0?Math.min(100,Math.max(0,usedTotal/currentIncome*100)):0;
+ $("budgetTotalBar").style.width=totalUsedPct+"%";
+ $("budgetTotalValue").textContent=currentIncome
+   ?money(usedTotal)+" / "+money(currentIncome)
+   :"Chưa đặt";
 
- const unallocated=Math.max(0,income-total),rp=income>0?unallocated/income*100:0;
- $("budgetRemaining").textContent=unallocated>0
-   ?"Chưa phân bổ từ Income: "+money(unallocated)+" · "+rp.toFixed(2)+"%"
-   :"";
+ $("budgetTotalUsed").textContent=currentIncome
+   ?(ordinaryLeft>=0
+      ?"Còn lại chi tiêu "+money(ordinaryLeft)
+      :"Chi tiêu vượt "+money(Math.abs(ordinaryLeft)))
+   :"Còn lại chi tiêu 0đ";
+
+ const allocationGap=currentIncome-allocatedTotal;
+ const gapPct=currentIncome>0?Math.abs(allocationGap)/currentIncome*100:0;
+ $("budgetRemaining").textContent=allocationGap>0
+   ?"Chưa phân bổ từ Income: "+money(allocationGap)+" · "+gapPct.toFixed(2)+"%"
+   :(allocationGap<0
+     ?"Phân bổ vượt Income: "+money(Math.abs(allocationGap))+" · "+gapPct.toFixed(2)+"%"
+     :"");
 
  document.querySelectorAll("[data-budget]").forEach(r=>r.onclick=()=>openBudgetModal(+r.dataset.budget));
 }
@@ -1987,7 +2083,7 @@ function moveBudget(dir){
 }
 
 function backup(){
- const payload={app:"ChamCongFinance",version:15,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
+ const payload={app:"ChamCongFinance",version:28,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
 }
 function restore(file){
  const r=new FileReader();r.onload=()=>{try{const obj=JSON.parse(String(r.result||"")),incoming=obj&&obj.data&&typeof obj.data==="object"?obj.data:obj;if(!incoming||typeof incoming!=="object")throw 0;if(!confirm("Khôi phục dữ liệu từ bản sao lưu này?"))return;data=normalizeData(incoming);bootstrapFundIcons();applyGlobalFundIcons();save();renderAll();alert("Đã khôi phục dữ liệu thành công.")}catch(e){alert("File sao lưu bị lỗi hoặc không đúng định dạng.")}};r.readAsText(file)

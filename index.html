@@ -456,6 +456,125 @@ body.dark .all-budget-btn{background:var(--accent-soft);color:var(--accent)}
 @media(max-width:360px){.report-list .rrow{padding:12px;gap:7px;grid-template-columns:12px 24px minmax(0,1fr) auto}.report-figures .rval{font-size:14px}}
 </style>
 
+
+<style id="reserve-budget-highlight-css">
+.budget-row.reserve-budget-row{
+  background:color-mix(in srgb, var(--reserve) 8%, var(--card));
+  border-left:3px solid var(--reserve);
+}
+.budget-row.reserve-budget-row .budget-row-name{
+  color:var(--reserve);
+}
+.budget-row.reserve-budget-row .budget-icon{
+  width:32px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:color-mix(in srgb, var(--reserve) 14%, transparent);
+}
+.budget-row.reserve-budget-row .progress>i{
+  background:var(--reserve);
+}
+body.dark .budget-row.reserve-budget-row{
+  background:color-mix(in srgb, var(--reserve) 11%, var(--card));
+}
+</style>
+
+
+<style id="money-calculator-css">
+.calc-enabled-wrap{position:relative;display:flex;align-items:center;min-width:0;width:100%}
+.calc-enabled-wrap>input{padding-right:46px!important}
+.calc-open-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;border-radius:9px;background:transparent;color:var(--accent);font-size:21px;display:flex;align-items:center;justify-content:center}
+.calc-sheet{padding-bottom:18px}
+.calc-display{margin:4px 16px 12px;padding:10px 14px;border-radius:12px;background:var(--field);text-align:right;min-height:72px}
+.calc-expression{font-size:14px;color:var(--muted);min-height:20px;word-break:break-all}
+.calc-value{font-size:29px;font-weight:750;line-height:1.25;word-break:break-all}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 12px}
+.calc-grid button{min-height:58px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font-size:23px;font-weight:650}
+.calc-grid .calc-op{color:var(--accent);font-size:27px}
+.calc-grid .calc-clear,.calc-grid .calc-back{color:#ff4b3e}
+.calc-grid .calc-equals{grid-column:span 2;color:var(--accent);font-size:28px}
+.calc-grid .calc-ok{background:var(--accent);color:white;border-color:var(--accent)}
+body.dark .calc-grid button{background:#171a1e}
+</style>
+
+
+<style id="report-card-alignment-fix">
+.report-mini:not(.full){
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.report-mini:not(.full) .lbl{
+  flex:0 0 auto;
+}
+.report-mini:not(.full) .val{
+  float:none !important;
+  margin:0 !important;
+  white-space:nowrap;
+  line-height:1.2;
+  text-align:right;
+}
+.report-mini.full{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+}
+.report-mini.full .lbl{
+  justify-self:start;
+}
+.report-mini.full .val{
+  float:none !important;
+  justify-self:center;
+  white-space:nowrap;
+  text-align:center;
+}
+</style>
+
+
+<style id="report-card-compact-fit">
+.report-cards{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+  gap:7px !important;
+}
+.report-mini{
+  min-width:0 !important;
+  padding:8px 9px !important;
+}
+.report-mini:not(.full){
+  justify-content:flex-start !important;
+  gap:6px !important;
+}
+.report-mini:not(.full) .lbl{
+  font-size:13px !important;
+  line-height:1.2 !important;
+  white-space:nowrap !important;
+}
+.report-mini:not(.full) .val{
+  font-size:17px !important;
+  line-height:1.2 !important;
+  margin-left:2px !important;
+  letter-spacing:-.2px !important;
+}
+@media(max-width:380px){
+  .report-mini{
+    padding:8px 7px !important;
+  }
+  .report-mini:not(.full){
+    gap:4px !important;
+  }
+  .report-mini:not(.full) .lbl{
+    font-size:12.5px !important;
+  }
+  .report-mini:not(.full) .val{
+    font-size:16px !important;
+  }
+}
+</style>
+
 </head>
 <body class="dark">
 <div class="app">
@@ -541,11 +660,11 @@ body.dark .all-budget-btn{background:var(--accent-soft);color:var(--accent)}
       <div class="report-mini"><span class="lbl">Chi tiêu</span><span class="val expense-color" id="reportExpense">0đ</span></div>
       <div class="report-mini"><span class="lbl">Thu nhập</span><span class="val income-color" id="reportIncome">0đ</span></div>
       <div class="report-mini full"><span class="lbl">Đang còn</span><span class="val" id="reportNet">0đ</span></div>
+      <div class="report-mini full"><span class="lbl">Để riêng</span><span class="val reserve-color" id="reportReserved">0đ</span></div>
     </div>
     <div class="report-tabs"><button id="reportTabExpense" class="active">Chi tiêu</button><button id="reportTabIncome">Thu nhập</button></div>
   </div>
   <div class="donut" id="reportDonut"></div>
-  <div id="reportChartNote" style="text-align:center;font-size:14px;color:var(--muted);padding:4px 18px 14px" hidden></div>
   <div class="report-list" id="reportList"></div>
 </section>
 
@@ -640,6 +759,25 @@ body.dark .all-budget-btn{background:var(--accent-soft);color:var(--accent)}
   </div>
 </div></div>
 
+
+<div class="modal" id="calculatorModal"><div class="sheet calc-sheet">
+  <div class="sheet-head">
+    <b>Máy tính</b>
+    <button class="close" data-close="calculatorModal">×</button>
+  </div>
+  <div class="calc-display">
+    <div class="calc-expression" id="calcExpression"></div>
+    <div class="calc-value" id="calcValue">0</div>
+  </div>
+  <div class="calc-grid">
+    <button type="button" data-calc="7">7</button><button type="button" data-calc="8">8</button><button type="button" data-calc="9">9</button><button type="button" class="calc-op" data-calc="/">÷</button>
+    <button type="button" data-calc="4">4</button><button type="button" data-calc="5">5</button><button type="button" data-calc="6">6</button><button type="button" class="calc-op" data-calc="*">×</button>
+    <button type="button" data-calc="1">1</button><button type="button" data-calc="2">2</button><button type="button" data-calc="3">3</button><button type="button" class="calc-op" data-calc="-">−</button>
+    <button type="button" data-calc="0">0</button><button type="button" data-calc="00">00</button><button type="button" class="calc-clear" data-calc="clear">AC</button><button type="button" class="calc-op" data-calc="+">+</button>
+    <button type="button" class="calc-back" data-calc="back">Del</button><button type="button" class="calc-equals" data-calc="equals">=</button><button type="button" class="calc-ok" id="calcApply">OK</button>
+  </div>
+</div></div>
+
 <script>
 const KEY="cham_cong_finance_v3";
 const $=id=>document.getElementById(id);
@@ -692,6 +830,7 @@ function normalizeData(raw){
  out.monthSalary=raw.monthSalary&&typeof raw.monthSalary==="object"?raw.monthSalary:{};
  out.transactions=Array.isArray(raw.transactions)?raw.transactions:[];
  out.categories=raw.categories&&typeof raw.categories==="object"?raw.categories:{};
+ out.fundIcons=raw.fundIcons&&typeof raw.fundIcons==="object"?{...raw.fundIcons}:{};
  out.categories.income=Array.isArray(out.categories.income)&&out.categories.income.length
    ?out.categories.income
    :JSON.parse(JSON.stringify(defaultIncomeCats));
@@ -810,6 +949,81 @@ function normalizeData(raw){
  return out;
 }
 let data=normalizeData(JSON.parse(localStorage.getItem(KEY)||"null"));
+
+function fundIconIdKey(id){
+ return id?"id:"+String(id):"";
+}
+function fundIconNameKey(name){
+ const n=normalizeFundName(name);
+ return n?"name:"+n:"";
+}
+function globalFundIcon(f){
+ if(!f)return "💼";
+ const reg=data&&data.fundIcons&&typeof data.fundIcons==="object"?data.fundIcons:{};
+ const nameKey=fundIconNameKey(f.name);
+ const idKey=fundIconIdKey(f.id||f.categoryId);
+ // Tên là khóa dùng chung mạnh nhất; ID giữ liên kết khi tên từng tháng khác nhau.
+ return String((nameKey&&reg[nameKey])||(idKey&&reg[idKey])||f.icon||"💼");
+}
+function applyGlobalFundIcon(f){
+ if(!f)return f;
+ f.icon=globalFundIcon(f);
+ return f;
+}
+function bootstrapFundIcons(){
+ if(!data.fundIcons||typeof data.fundIcons!=="object")data.fundIcons={};
+ const reg=data.fundIcons;
+ if(Object.keys(reg).length)return;
+
+ // Lần đầu nâng cấp: ưu tiên icon của tháng hiện tại (để giữ icon người dùng vừa đổi),
+ // rồi nối các alias cùng ID/tên ở các tháng khác vào cùng icon đó.
+ const currentMk=todayKey().slice(0,7);
+ const current=Array.isArray(data.budgetMonths&&data.budgetMonths[currentMk])
+   ?data.budgetMonths[currentMk]
+   :(data.funds||[]);
+ const all=[
+   current,
+   data.funds||[],
+   ...Object.values(data.budgetMonths||{}).filter(Array.isArray),
+   data.categories&&Array.isArray(data.categories.expense)?data.categories.expense:[]
+ ];
+
+ const remember=(f,prefer=false)=>{
+   if(!f)return;
+   const idKey=fundIconIdKey(f.id||f.categoryId);
+   const nameKey=fundIconNameKey(f.name);
+   const existing=(idKey&&reg[idKey])||(nameKey&&reg[nameKey]);
+   const icon=String((prefer?f.icon:null)||existing||f.icon||"💼");
+   if(idKey)reg[idKey]=icon;
+   if(nameKey)reg[nameKey]=icon;
+ };
+
+ current.forEach(f=>remember(f,true));
+ all.forEach(arr=>{
+   if(!Array.isArray(arr))return;
+   arr.forEach(f=>{
+     if(!f)return;
+     const idKey=fundIconIdKey(f.id||f.categoryId);
+     const nameKey=fundIconNameKey(f.name);
+     const canonical=(idKey&&reg[idKey])||(nameKey&&reg[nameKey])||String(f.icon||"💼");
+     if(idKey)reg[idKey]=canonical;
+     if(nameKey)reg[nameKey]=canonical;
+   });
+ });
+}
+function applyGlobalFundIcons(){
+ const update=arr=>{
+   if(!Array.isArray(arr))return;
+   arr.forEach(applyGlobalFundIcon);
+ };
+ update(data.funds);
+ Object.values(data.budgetMonths||{}).forEach(update);
+ if(data.categories)update(data.categories.expense);
+}
+
+bootstrapFundIcons();
+applyGlobalFundIcons();
+
 function save(){localStorage.setItem(KEY,JSON.stringify(data))}
 function cloneFunds(arr){
  return (arr||[]).map(f=>({
@@ -817,7 +1031,7 @@ function cloneFunds(arr){
    id:String(f.id||f.categoryId||("fund_"+Date.now().toString(36))),
    categoryId:String(f.id||f.categoryId||""),
    name:String(f.name||"Quỹ"),
-   icon:String(f.icon||"💼"),
+   icon:globalFundIcon(f),
    color:String(f.color||"#ff8a16"),
    mode:f.mode==="percent"?"percent":"amount",
    percent:Number(f.percent)||0,
@@ -827,7 +1041,9 @@ function cloneFunds(arr){
 }
 function fundsForMonth(mk){
  const own=data.budgetMonths&&Array.isArray(data.budgetMonths[mk])?data.budgetMonths[mk]:null;
- return own||data.funds||[];
+ const arr=own||data.funds||[];
+ arr.forEach(applyGlobalFundIcon);
+ return arr;
 }
 function ensureBudgetMonth(mk){
  if(!data.budgetMonths||typeof data.budgetMonths!=="object")data.budgetMonths={};
@@ -838,14 +1054,14 @@ function fundForContext(id,context){
  const mk=context&&String(context).match(/^\d{4}-\d{2}/)?String(context).slice(0,7):"";
  if(mk){
    const hit=fundsForMonth(mk).find(f=>f.id===id);
-   if(hit)return hit;
+   if(hit)return applyGlobalFundIcon(hit);
  }
  let hit=(data.funds||[]).find(f=>f.id===id);
- if(hit)return hit;
+ if(hit)return applyGlobalFundIcon(hit);
  for(const arr of Object.values(data.budgetMonths||{})){
    if(!Array.isArray(arr))continue;
    hit=arr.find(f=>f.id===id);
-   if(hit)return hit;
+   if(hit)return applyGlobalFundIcon(hit);
  }
  return null;
 }
@@ -915,22 +1131,48 @@ function actualExpenseForMonth(k){
    .filter(t=>t.type==="expense"&&t.date.slice(0,7)===k&&!isReserveTransaction(t))
    .reduce((s,t)=>s+amountNumber(t.amount),0);
 }
+function reserveSummaryForMonth(k,income){
+ let allocated=0,spent=0,balance=0,committed=0;
+ fundsForMonth(k).filter(isReserveFund).forEach(f=>{
+   const amount=fundAmount(f,income);
+   const used=fundSpent(f,k);
+   allocated+=amount;
+   spent+=used;
+   balance+=Math.max(0,amount-used);
+   committed+=Math.max(amount,used);
+ });
+ return {allocated,spent,balance,committed};
+}
 
 function monthManual(k,type){return data.transactions.filter(t=>t.type===type&&t.date.slice(0,7)===k).reduce((s,t)=>s+amountNumber(t.amount),0)}
 function monthTotals(k){
  const a=monthAttendance(k),manualIncome=monthManual(k,"income");
  const income=a.sum+manualIncome;
- const expense=actualExpenseForMonth(k);
- const reserved=reservedForMonth(k);
- return {attendance:a,manualIncome,income,expense,reserved,net:income-expense};
+ const expense=actualExpenseForMonth(k);      // chỉ các khoản chi thông thường
+ const reserve=reserveSummaryForMonth(k,income);
+ const reserved=reservedForMonth(k);          // chi thực tế từ 3 quỹ, giữ để Lịch hiển thị dòng tiền
+ const net=income-expense-reserve.committed;  // tiền đang còn ngoài 3 quỹ để riêng
+ return {
+   attendance:a,manualIncome,income,expense,reserved,
+   reserveAllocated:reserve.allocated,
+   reserveSpent:reserve.spent,
+   reserveBalance:reserve.balance,
+   reserveCommitted:reserve.committed,
+   net
+ };
 }
 function yearTotals(y){
- let income=0,expense=0,reserved=0;
+ let income=0,expense=0,reserved=0,reserveBalance=0,reserveCommitted=0,net=0;
  for(let m=0;m<12;m++){
    const t=monthTotals(mkey(y,m));
-   income+=t.income;expense+=t.expense;reserved+=t.reserved||0;
+   income+=t.income;
+   expense+=t.expense;
+   reserved+=t.reserved||0;
+   reserveBalance+=t.reserveBalance||0;
+   reserveCommitted+=t.reserveCommitted||0;
+   net+=t.net||0;
  }
- return {income,expense,reserved,net:income-expense};
+ return {income,expense,reserved,reserveBalance,reserveCommitted,net};
 }
 
 function dayAttendanceEntries(k){
@@ -980,9 +1222,9 @@ function dayTransactions(k){
  const manual=data.transactions.filter(t=>t.date===k).map(t=>({...t,auto:false,name:t.categoryName,icon:getCategoryIcon(t.type,t.categoryId,t.date)}));
  return manual.concat(dayAttendanceEntries(k));
 }
-function dayNet(k){return dayTransactions(k).reduce((s,t)=>s+(t.type==="expense"?(isReserveTransaction(t)?0:-amountNumber(t.amount)):amountNumber(t.amount)),0)}
+function dayNet(k){return dayTransactions(k).reduce((s,t)=>s+(t.type==="expense"?-amountNumber(t.amount):amountNumber(t.amount)),0)}
 function getCategory(type,id,context){return type==="expense"?fundForContext(id,context):(data.categories[type]||[]).find(c=>c.id===id)}
-function getCategoryIcon(type,id,context){const c=getCategory(type,id,context);return c?c.icon:(type==="expense"?"🧾":"💰")}
+function getCategoryIcon(type,id,context){const c=getCategory(type,id,context);return c?(type==="expense"?globalFundIcon(c):c.icon):(type==="expense"?"🧾":"💰")}
 function uid(){return "t_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8)}
 
 let entryMode="income",selectedCategoryId="salary",entryDate=todayKey();
@@ -991,6 +1233,55 @@ let calCursor=new Date();calCursor.setDate(1);let calSelected=todayKey();
 let reportCursor=new Date();reportCursor.setDate(1);let reportMode="month",reportTab="expense";
 let budgetCursor=new Date();budgetCursor.setDate(1);
 let editingTxId=null,catManageType="income",editingBudgetIndex=-1,selectedBudgetIcon="💼";
+
+
+let calculatorTarget=null,calculatorExpr="";
+function calcSafeEval(expr){
+ if(!expr||!/^[0-9+\-*/. ()]+$/.test(expr))return 0;
+ try{
+   const v=Function('"use strict";return ('+expr+')')();
+   return Number.isFinite(v)?v:0;
+ }catch(e){return 0}
+}
+function calcRender(){
+ const shown=calculatorExpr.replace(/\*/g,"×").replace(/\//g,"÷");
+ $("calcExpression").textContent=shown;
+ const v=calcSafeEval(calculatorExpr);
+ $("calcValue").textContent=new Intl.NumberFormat("vi-VN",{maximumFractionDigits:2}).format(v||0);
+}
+function openMoneyCalculator(input){
+ calculatorTarget=input;
+ calculatorExpr=String(parseMoney(input.value)||"");
+ calcRender();
+ $("calculatorModal").classList.add("open");
+}
+function attachMoneyCalculator(input){
+ if(!input||input.dataset.calcBound==="1")return;
+ input.dataset.calcBound="1";
+ const wrap=document.createElement("div");
+ wrap.className="calc-enabled-wrap";
+ input.parentNode.insertBefore(wrap,input);
+ wrap.appendChild(input);
+ const btn=document.createElement("button");
+ btn.type="button";btn.className="calc-open-btn";btn.innerHTML="▦";btn.setAttribute("aria-label","Mở máy tính");
+ btn.onclick=e=>{e.preventDefault();e.stopPropagation();openMoneyCalculator(input)};
+ wrap.appendChild(btn);
+}
+function calcPress(key){
+ if(key==="clear"){calculatorExpr="";calcRender();return}
+ if(key==="back"){calculatorExpr=calculatorExpr.slice(0,-1);calcRender();return}
+ if(key==="equals"){
+   calculatorExpr=String(Math.round(calcSafeEval(calculatorExpr)*100)/100);
+   calcRender();return;
+ }
+ if(/[+\-*/]/.test(key)){
+   if(!calculatorExpr)calculatorExpr="0";
+   calculatorExpr=calculatorExpr.replace(/[+\-*/]+$/,"")+key;
+ }else{
+   calculatorExpr+=key;
+ }
+ calcRender();
+}
 
 function setMoneyInput(el,n){el.value=n?new Intl.NumberFormat("vi-VN").format(Math.round(n)):""}
 function bindMoneyInput(el){
@@ -1175,7 +1466,7 @@ function renderCalendar(){
  for(let i=1;i<=tail;i++){const dt=new Date(y,m+1,i),k=dkey(dt.getFullYear(),dt.getMonth(),i),w=dt.getDay();h+=calCell(k,i,true,w)}
  $("mainCalendar").innerHTML=h;
  document.querySelectorAll("[data-cal-date]").forEach(c=>c.onclick=()=>{calSelected=c.dataset.calDate;const d=dateFromKey(calSelected);calCursor=new Date(d.getFullYear(),d.getMonth(),1);renderCalendar()});
- const t=monthTotals(mk);$("calIncome").textContent=money(t.income);$("calExpense").textContent=money(t.expense);$("calNet").textContent=(t.net>=0?"+":"")+money(t.net);$("calNet").className="sum-val "+(t.net>=0?"income-color":"expense-color");
+ const t=monthTotals(mk);$("calIncome").textContent=money(t.income);$("calExpense").textContent=money(t.expense+(t.reserved||0));$("calNet").textContent=(t.net>=0?"+":"")+money(t.net);$("calNet").className="sum-val "+(t.net>=0?"income-color":"expense-color");
  renderDayTransactions();
 }
 function formatCalendarAmount(n){
@@ -1199,7 +1490,7 @@ function dayFlow(k){
      else expense+=v;
    }else income+=v;
  });
- return {income,expense,reserved,net:income-expense};
+ return {income,expense,reserved,net:income-expense-reserved};
 }
 function calCell(k,d,other,w){
  const flow=dayFlow(k);
@@ -1209,9 +1500,10 @@ function calCell(k,d,other,w){
    const txt=formatCalendarAmount(flow.income);
    lines+=`<div class="cal-money-line income ${flow.income>=1000000?"compact":""}" title="Thu ${money(flow.income)}">${txt}</div>`;
  }
- if(flow.expense>0){
-   const txt=formatCalendarAmount(-flow.expense);
-   lines+=`<div class="cal-money-line expense ${flow.expense>=1000000?"compact":""}" title="Chi ${money(flow.expense)}">${txt}</div>`;
+ const outflow=flow.expense+flow.reserved;
+ if(outflow>0){
+   const txt=formatCalendarAmount(-outflow);
+   lines+=`<div class="cal-money-line expense ${outflow>=1000000?"compact":""}" title="Chi ${money(outflow)}">${txt}</div>`;
  }
  return `<div class="${cls}" data-cal-date="${k}">
    <div class="cal-daynum">${d}</div>
@@ -1256,17 +1548,20 @@ function reportColorsFor(items,type){
 function renderReport(){
  $("reportMonthly").classList.toggle("active",reportMode==="month");$("reportYearly").classList.toggle("active",reportMode==="year");
  $("reportPeriodLabel").textContent=reportMode==="month"?pad(reportCursor.getMonth()+1)+"/"+reportCursor.getFullYear():String(reportCursor.getFullYear());
- let income=0,expense=0;
- reportKeys().forEach(k=>{const t=monthTotals(k);income+=t.income;expense+=t.expense});
+ let income=0,expense=0,reserveBalance=0,net=0;
+ reportKeys().forEach(k=>{
+   const t=monthTotals(k);
+   income+=t.income;
+   expense+=t.expense;
+   reserveBalance+=t.reserveBalance||0;
+   net+=t.net||0;
+ });
  $("reportIncome").textContent="+"+money(income);
  $("reportExpense").textContent="-"+money(expense);
- const net=income-expense;
  $("reportNet").textContent=(net>=0?"+":"")+money(net);
+ $("reportReserved").textContent=money(reserveBalance);
  $("reportTabIncome").classList.toggle("active",reportTab==="income");$("reportTabExpense").classList.toggle("active",reportTab==="expense");
  const items=reportColorsFor(reportBreakdown(reportTab),reportTab),total=items.reduce((sum,x)=>sum+x.amount,0);
- const chartNote=$("reportChartNote");
- chartNote.hidden=reportTab!=="expense";
- chartNote.textContent=reportTab==="expense"?"Tổng chi & để dành: "+money(total):"";
  const donut=$("reportDonut");
  donut.setAttribute("role","img");
  donut.setAttribute("aria-label",total>0?"Biểu đồ "+(reportTab==="income"?"thu nhập":"chi tiêu và khoản để dành")+". Chi tiết và chú thích màu ở danh sách bên dưới.":"Biểu đồ chưa có dữ liệu");
@@ -1297,11 +1592,16 @@ function renderBudget(){
    const amount=fundAmount(f,income);
    const spent=fundSpent(f,mk);
    const left=amount-spent;
-   const pct=amount>0?Math.min(100,spent/amount*100):0;
+   const reserve=isReserveFund(f);
+   // Travel / Tiết kiệm / Dự phòng là tiền đã để riêng:
+   // bắt đầu đầy 100%, chỉ giảm khi có giao dịch chi đúng mục đó.
+   const pct=amount>0
+     ?Math.min(100,Math.max(0,(reserve?Math.max(0,left):spent)/amount*100))
+     :0;
    total+=amount;
-   used+=spent;
+   used+=reserve?amount:spent;
 
-   return `<div class="budget-row" data-budget="${i}">
+   return `<div class="budget-row ${reserve?"reserve-budget-row":""}" data-budget="${i}">
      <div class="budget-row-top">
        <div class="budget-icon">${esc(f.icon||"💼")}</div>
        <div>
@@ -1309,11 +1609,21 @@ function renderBudget(){
          <div class="progress"><i style="width:${pct}%"></i></div>
        </div>
        <div class="budget-right">
-         <div class="budget-set">${amount?money(spent)+" / "+money(amount):"Chưa đặt"}</div>
+         <div class="budget-set">${
+           amount
+             ?(reserve
+               ?money(Math.max(0,left))+" / "+money(amount)
+               :money(spent)+" / "+money(amount))
+             :"Chưa đặt"
+         }</div>
          ${amount
-           ?(left>=0
-             ?`<div class="budget-left">Còn lại ${money(left)}</div>`
-             :`<div class="budget-left budget-over">Vượt ${money(Math.abs(left))}</div>`)
+           ?(reserve
+             ?(left>=0
+               ?`<div class="budget-left">Đã chi ${money(spent)}</div>`
+               :`<div class="budget-left budget-over">Vượt ${money(Math.abs(left))}</div>`)
+             :(left>=0
+               ?`<div class="budget-left">Còn lại ${money(left)}</div>`
+               :`<div class="budget-left budget-over">Vượt ${money(Math.abs(left))}</div>`))
            :'<div class="budget-used">-</div>'}
        </div>
        <div class="budget-chevron">›</div>
@@ -1439,7 +1749,7 @@ function openBudgetModal(index){
    ?{name:"Quỹ mới",mode:"amount",amount:0,percent:0,icon:"💼"}
    :arr[index];
 
- selectedBudgetIcon=f.icon||"💼";
+ selectedBudgetIcon=globalFundIcon(f);
  $("budgetModalTitle").textContent=isNew?"Thêm ngân sách":"Sửa ngân sách";
  $("budgetName").value=f.name;
  $("budgetMode").value=f.mode;
@@ -1449,17 +1759,38 @@ function openBudgetModal(index){
  $("budgetMoveUp").style.visibility=isNew?"hidden":"visible";
  $("budgetMoveDown").style.visibility=isNew?"hidden":"visible";
  $("budgetModal").classList.add("open");
+ if(f.mode==="amount")attachMoneyCalculator($("budgetValue"));
 }
 // Icon là thuộc tính chung của quỹ; hạn mức và tên vẫn được lưu theo tháng.
-function syncFundIcon(id,icon){
- if(!id||!icon)return;
+function syncFundIcon(id,icon,name,oldName){
+ if(!icon)return;
+ if(!data.fundIcons||typeof data.fundIcons!=="object")data.fundIcons={};
+
+ const names=[name,oldName].map(normalizeFundName).filter(Boolean);
+ const idKey=fundIconIdKey(id);
+ if(idKey)data.fundIcons[idKey]=icon;
+ names.forEach(n=>data.fundIcons["name:"+n]=icon);
+
  const update=arr=>{
    if(!Array.isArray(arr))return;
-   arr.forEach(f=>{if(f&&f.id===id)f.icon=icon});
+   arr.forEach(f=>{
+     if(!f)return;
+     const sameId=id&&String(f.id||f.categoryId||"")===String(id);
+     const sameName=names.includes(normalizeFundName(f.name));
+     if(sameId||sameName){
+       f.icon=icon;
+       const fk=fundIconIdKey(f.id||f.categoryId);
+       const nk=fundIconNameKey(f.name);
+       if(fk)data.fundIcons[fk]=icon;
+       if(nk)data.fundIcons[nk]=icon;
+     }
+   });
  };
+
  update(data.funds);
  Object.values(data.budgetMonths||{}).forEach(update);
- update(data.categories.expense);
+ if(data.categories)update(data.categories.expense);
+ applyGlobalFundIcons();
 }
 function saveBudgetEdit(){
  const mk=mkey(budgetCursor.getFullYear(),budgetCursor.getMonth());
@@ -1467,6 +1798,7 @@ function saveBudgetEdit(){
  const mode=$("budgetMode").value;
  const val=Number(String($("budgetValue").value).replace(",","."))||0;
  const name=$("budgetName").value.trim()||"Quỹ";
+ const iconOldName=editingBudgetIndex>=0&&arr[editingBudgetIndex]?arr[editingBudgetIndex].name:"";
 
  if(editingBudgetIndex<0){
    const id="fund_"+mk.replace("-","")+"_"+Date.now().toString(36);
@@ -1499,7 +1831,7 @@ function saveBudgetEdit(){
  }
 
  const savedFund=arr[editingBudgetIndex<0?arr.length-1:editingBudgetIndex];
- syncFundIcon(savedFund.id,savedFund.icon);
+ syncFundIcon(savedFund.id,savedFund.icon,savedFund.name,iconOldName);
  save();
  closeModal("budgetModal");
  renderAll();
@@ -1526,10 +1858,10 @@ function moveBudget(dir){
 }
 
 function backup(){
- const payload={app:"ChamCongFinance",version:7,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
+ const payload={app:"ChamCongFinance",version:11,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
 }
 function restore(file){
- const r=new FileReader();r.onload=()=>{try{const obj=JSON.parse(String(r.result||"")),incoming=obj&&obj.data&&typeof obj.data==="object"?obj.data:obj;if(!incoming||typeof incoming!=="object")throw 0;if(!confirm("Khôi phục dữ liệu từ bản sao lưu này?"))return;data=normalizeData(incoming);save();renderAll();alert("Đã khôi phục dữ liệu thành công.")}catch(e){alert("File sao lưu bị lỗi hoặc không đúng định dạng.")}};r.readAsText(file)
+ const r=new FileReader();r.onload=()=>{try{const obj=JSON.parse(String(r.result||"")),incoming=obj&&obj.data&&typeof obj.data==="object"?obj.data:obj;if(!incoming||typeof incoming!=="object")throw 0;if(!confirm("Khôi phục dữ liệu từ bản sao lưu này?"))return;data=normalizeData(incoming);bootstrapFundIcons();applyGlobalFundIcons();save();renderAll();alert("Đã khôi phục dữ liệu thành công.")}catch(e){alert("File sao lưu bị lỗi hoặc không đúng định dạng.")}};r.readAsText(file)
 }
 function downloadBlob(text,name,type){const blob=new Blob([text],{type}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 
@@ -1626,6 +1958,16 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>switchPage(b.da
 
 applyTheme(localStorage.getItem("cham_cong_neon_dark")!=="0");
 bindMoneyInput($("entryAmount"));bindMoneyInput($("salaryMonth"));bindMoneyInput($("salaryDefault"));bindMoneyInput($("ctp"));
+["entryAmount","salaryMonth","salaryDefault","ctp","editTxAmount"].forEach(id=>attachMoneyCalculator($(id)));
+document.querySelectorAll("[data-calc]").forEach(b=>b.onclick=()=>calcPress(b.dataset.calc));
+$("calcApply").onclick=()=>{
+ if(!calculatorTarget)return closeModal("calculatorModal");
+ const value=Math.max(0,Math.round(calcSafeEval(calculatorExpr)));
+ setMoneyInput(calculatorTarget,value);
+ calculatorTarget.dispatchEvent(new Event("input",{bubbles:true}));
+ calculatorTarget.dispatchEvent(new Event("change",{bubbles:true}));
+ closeModal("calculatorModal");
+};
 renderAll();
 </script>
 </body>

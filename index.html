@@ -495,7 +495,7 @@ body.dark .budget-row.reserve-budget-row{
 .calc-grid button{min-height:58px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font-size:23px;font-weight:650}
 .calc-grid .calc-op{color:var(--accent);font-size:27px}
 .calc-grid .calc-clear,.calc-grid .calc-back{color:#ff4b3e}
-.calc-grid .calc-equals{grid-column:span 2;color:var(--accent);font-size:28px}
+.calc-grid .calc-equals{grid-column:auto;color:var(--accent);font-size:28px}
 .calc-grid .calc-ok{background:var(--accent);color:white;border-color:var(--accent)}
 body.dark .calc-grid button{background:#171a1e}
 </style>
@@ -594,6 +594,31 @@ body.dark .calc-grid button{background:#171a1e}
       transparent 50.5% 74.5%,
       var(--bg) 74.5% 75.5%,
       transparent 75.5%);
+}
+</style>
+
+
+<style id="report-attendance-detail-css">
+.report-detail-row{cursor:pointer}
+.report-detail-row:active{background:var(--soft)}
+.report-detail-arrow{font-size:22px;color:var(--muted);text-align:right}
+.report-detail-sheet{width:min(760px,100%)}
+.report-detail-period{font-size:13px;color:var(--muted);margin:-6px 0 12px}
+.report-detail-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.report-detail-table{width:100%;border-collapse:collapse;min-width:360px;font-size:13px}
+.report-detail-table th,
+.report-detail-table td{padding:10px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);vertical-align:middle}
+.report-detail-table th:last-child,
+.report-detail-table td:last-child{border-right:0}
+.report-detail-table tr:last-child td{border-bottom:0}
+.report-detail-table th{background:var(--soft);font-weight:750;text-align:center;white-space:nowrap}
+.report-detail-table td{text-align:center}
+.report-detail-table td:first-child{white-space:nowrap}
+.report-detail-table .money-cell{text-align:right;white-space:nowrap;font-weight:700}
+.report-detail-table .total-row td{font-weight:800;background:var(--soft)}
+.report-detail-empty{padding:22px;text-align:center;color:var(--muted)}
+@media (min-width:700px){
+  .modal .sheet.report-detail-sheet{width:620px !important;max-width:620px !important}
 }
 </style>
 
@@ -783,6 +808,16 @@ body.dark .calc-grid button{background:#171a1e}
 </div></div>
 
 
+
+<div class="modal" id="reportAttendanceDetailModal"><div class="sheet report-detail-sheet">
+  <div class="sheet-head">
+    <b id="reportAttendanceDetailTitle">Chi tiết</b>
+    <button class="close" data-close="reportAttendanceDetailModal">×</button>
+  </div>
+  <div class="report-detail-period" id="reportAttendanceDetailPeriod"></div>
+  <div id="reportAttendanceDetailBody"></div>
+</div></div>
+
 <div class="modal" id="calculatorModal"><div class="sheet calc-sheet">
   <div class="sheet-head">
     <b>Máy tính</b>
@@ -796,8 +831,8 @@ body.dark .calc-grid button{background:#171a1e}
     <button type="button" data-calc="7">7</button><button type="button" data-calc="8">8</button><button type="button" data-calc="9">9</button><button type="button" class="calc-op" data-calc="/">÷</button>
     <button type="button" data-calc="4">4</button><button type="button" data-calc="5">5</button><button type="button" data-calc="6">6</button><button type="button" class="calc-op" data-calc="*">×</button>
     <button type="button" data-calc="1">1</button><button type="button" data-calc="2">2</button><button type="button" data-calc="3">3</button><button type="button" class="calc-op" data-calc="-">−</button>
-    <button type="button" data-calc="0">0</button><button type="button" data-calc="00">00</button><button type="button" class="calc-clear" data-calc="clear">AC</button><button type="button" class="calc-op" data-calc="+">+</button>
-    <button type="button" class="calc-back" data-calc="back">Del</button><button type="button" class="calc-equals" data-calc="equals">=</button><button type="button" class="calc-ok" id="calcApply">OK</button>
+    <button type="button" data-calc="0">0</button><button type="button" data-calc="000">000</button><button type="button" data-calc=",">,</button><button type="button" class="calc-op" data-calc="+">+</button>
+    <button type="button" class="calc-clear" data-calc="clear">AC</button><button type="button" class="calc-back" data-calc="back">Del</button><button type="button" class="calc-equals" data-calc="equals">=</button><button type="button" class="calc-ok" id="calcApply">OK</button>
   </div>
 </div></div>
 
@@ -1263,22 +1298,51 @@ let editingTxId=null,catManageType="income",editingBudgetIndex=-1,selectedBudget
 
 
 let calculatorTarget=null,calculatorExpr="";
+let calculatorJustEvaluated=false;
+
+function calcNormalizeExpr(expr){
+ return String(expr||"").replace(/,/g,".");
+}
 function calcSafeEval(expr){
- if(!expr||!/^[0-9+\-*/. ()]+$/.test(expr))return 0;
+ const normalized=calcNormalizeExpr(expr);
+ if(!normalized||!/^[0-9+\-*/. ()]+$/.test(normalized))return 0;
  try{
-   const v=Function('"use strict";return ('+expr+')')();
+   const v=Function('"use strict";return ('+normalized+')')();
    return Number.isFinite(v)?v:0;
  }catch(e){return 0}
 }
+function calcFormatExprNumber(v){
+ if(!Number.isFinite(v))return "";
+ return String(Math.round(v*1000000)/1000000).replace(".",",");
+}
+function calcPrettyNumberText(raw){
+ const s=String(raw||"");
+ if(!s)return "0";
+ const normalized=s.replace(",",".");
+ const n=Number(normalized);
+ if(!Number.isFinite(n))return s;
+ const decimals=s.includes(",")?s.split(",")[1].length:0;
+ return new Intl.NumberFormat("vi-VN",{
+   minimumFractionDigits:decimals,
+   maximumFractionDigits:Math.max(decimals,6)
+ }).format(n);
+}
+function calcParts(){
+ const expr=String(calculatorExpr||"");
+ const m=expr.match(/^(.*[+\-*/])([^+\-*/]*)$/);
+ if(!m)return {history:"",current:expr};
+ return {history:m[1],current:m[2]};
+}
 function calcRender(){
- const shown=calculatorExpr.replace(/\*/g,"×").replace(/\//g,"÷");
- $("calcExpression").textContent=shown;
- const v=calcSafeEval(calculatorExpr);
- $("calcValue").textContent=new Intl.NumberFormat("vi-VN",{maximumFractionDigits:2}).format(v||0);
+ const parts=calcParts();
+ $("calcExpression").textContent=parts.history.replace(/\*/g,"×").replace(/\//g,"÷");
+ $("calcValue").textContent=calcPrettyNumberText(parts.current||"0");
 }
 function openMoneyCalculator(input){
  calculatorTarget=input;
- calculatorExpr=String(parseMoney(input.value)||"");
+ const numeric=parseMoney(String(input.value||""));
+ calculatorExpr=numeric?String(numeric):"";
+ calculatorJustEvaluated=false;
  calcRender();
  $("calculatorModal").classList.add("open");
 }
@@ -1290,23 +1354,58 @@ function attachMoneyCalculator(input){
  input.parentNode.insertBefore(wrap,input);
  wrap.appendChild(input);
  const btn=document.createElement("button");
- btn.type="button";btn.className="calc-open-btn";btn.innerHTML="▦";btn.setAttribute("aria-label","Mở máy tính");
+ btn.type="button";
+ btn.className="calc-open-btn";
+ btn.innerHTML="▦";
+ btn.setAttribute("aria-label","Mở máy tính");
  btn.onclick=e=>{e.preventDefault();e.stopPropagation();openMoneyCalculator(input)};
  wrap.appendChild(btn);
 }
+function calcCurrentOperand(){
+ return calcParts().current||"";
+}
 function calcPress(key){
- if(key==="clear"){calculatorExpr="";calcRender();return}
- if(key==="back"){calculatorExpr=calculatorExpr.slice(0,-1);calcRender();return}
+ if(key==="clear"){
+   calculatorExpr="";
+   calculatorJustEvaluated=false;
+   calcRender();
+   return;
+ }
+ if(key==="back"){
+   calculatorExpr=calculatorExpr.slice(0,-1);
+   calculatorJustEvaluated=false;
+   calcRender();
+   return;
+ }
  if(key==="equals"){
-   calculatorExpr=String(Math.round(calcSafeEval(calculatorExpr)*100)/100);
-   calcRender();return;
+   if(!calculatorExpr)return;
+   const expr=calculatorExpr.replace(/[+\-*/]+$/,"");
+   const value=calcSafeEval(expr);
+   calculatorExpr=calcFormatExprNumber(value);
+   calculatorJustEvaluated=true;
+   $("calcExpression").textContent=expr.replace(/\*/g,"×").replace(/\//g,"÷")+" =";
+   $("calcValue").textContent=calcPrettyNumberText(calculatorExpr);
+   return;
  }
  if(/[+\-*/]/.test(key)){
+   calculatorJustEvaluated=false;
    if(!calculatorExpr)calculatorExpr="0";
    calculatorExpr=calculatorExpr.replace(/[+\-*/]+$/,"")+key;
- }else{
-   calculatorExpr+=key;
+   calcRender();
+   return;
  }
+ if(calculatorJustEvaluated){
+   calculatorExpr="";
+   calculatorJustEvaluated=false;
+ }
+ if(key===","){
+   const operand=calcCurrentOperand();
+   if(operand.includes(",")||operand.includes("."))return;
+   calculatorExpr+=operand?",":"0,";
+   calcRender();
+   return;
+ }
+ calculatorExpr+=key;
  calcRender();
 }
 
@@ -1693,6 +1792,129 @@ function reportBudgetState(k){
  };
 }
 
+
+function reportAttendanceDetailRows(kind){
+ const rows=[];
+ reportKeys().forEach(k=>{
+   const [y,mm]=k.split("-").map(Number),m=mm-1;
+   const hourly=hourlyForMonth(k);
+   for(let d=1;d<=dim(y,m);d++){
+     const date=dkey(y,m,d);
+     const x=data.days[date]||{};
+     if(x.worked!==true)continue;
+     const rh=restHoursOf(x);
+
+     if(kind==="travel"){
+       const km=Number(x.travel)||0;
+       if(km>0)rows.push({date,km,amount:km*2000});
+     }
+
+     if(kind==="ctp"){
+       const amount=parseMoney(x.ctp);
+       if(amount>0)rows.push({date,amount});
+     }
+
+     if(kind==="ot"){
+       const h15=Number(x.ot15)||0;
+       const h2=Number(x.ot2)||0;
+
+       if(h15>0)rows.push({
+         date,
+         hours:h15,
+         factor:1.5,
+         amount:h15*hourly*1.5
+       });
+
+       if(h2>0)rows.push({
+         date,
+         hours:h2,
+         factor:2,
+         amount:h2*hourly*2
+       });
+
+       if(isDefaultOT2Day(y,m,d)&&x.workedByUser===true&&rh<8){
+         rows.push({
+           date,
+           hours:8,
+           factor:2,
+           amount:8*hourly*2,
+           defaultOT2:true
+         });
+       }
+     }
+   }
+ });
+ return rows.sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function reportDetailPeriodText(){
+ if(reportMode==="year")return "Năm "+reportCursor.getFullYear();
+ return "Tháng "+pad(reportCursor.getMonth()+1)+"/"+reportCursor.getFullYear();
+}
+
+function reportDetailDate(k){
+ const [y,m,d]=String(k).split("-");
+ return d+"/"+m+"/"+y;
+}
+
+function openReportAttendanceDetail(kind){
+ const rows=reportAttendanceDetailRows(kind);
+ const title=kind==="ot"?"Tăng ca":(kind==="travel"?"Đi lại":"Công tác phí");
+ $("reportAttendanceDetailTitle").textContent=title;
+ $("reportAttendanceDetailPeriod").textContent=reportDetailPeriodText();
+
+ if(!rows.length){
+   $("reportAttendanceDetailBody").innerHTML='<div class="report-detail-empty">Chưa có dữ liệu</div>';
+   $("reportAttendanceDetailModal").classList.add("open");
+   return;
+ }
+
+ let table="";
+ if(kind==="travel"){
+   const totalKm=rows.reduce((s,r)=>s+r.km,0);
+   const totalAmount=rows.reduce((s,r)=>s+r.amount,0);
+   table=`<div class="report-detail-table-wrap"><table class="report-detail-table">
+     <thead><tr><th>Ngày tháng</th><th>Quãng đường</th><th>Thành tiền</th></tr></thead>
+     <tbody>
+       ${rows.map(r=>`<tr><td>${reportDetailDate(r.date)}</td><td>${r.km} km</td><td class="money-cell">${money(r.amount)}</td></tr>`).join("")}
+       <tr class="total-row"><td>Tổng</td><td>${totalKm} km</td><td class="money-cell">${money(totalAmount)}</td></tr>
+     </tbody>
+   </table></div>`;
+ }
+
+ if(kind==="ctp"){
+   const totalAmount=rows.reduce((s,r)=>s+r.amount,0);
+   table=`<div class="report-detail-table-wrap"><table class="report-detail-table">
+     <thead><tr><th>Ngày tháng</th><th>Công tác phí</th></tr></thead>
+     <tbody>
+       ${rows.map(r=>`<tr><td>${reportDetailDate(r.date)}</td><td class="money-cell">${money(r.amount)}</td></tr>`).join("")}
+       <tr class="total-row"><td>Tổng</td><td class="money-cell">${money(totalAmount)}</td></tr>
+     </tbody>
+   </table></div>`;
+ }
+
+ if(kind==="ot"){
+   const totalHours=rows.reduce((s,r)=>s+r.hours,0);
+   const totalAmount=rows.reduce((s,r)=>s+r.amount,0);
+   table=`<div class="report-detail-table-wrap"><table class="report-detail-table">
+     <thead><tr><th>Ngày tháng</th><th>Số giờ</th><th>Hệ số</th><th>Thành tiền</th></tr></thead>
+     <tbody>
+       ${rows.map(r=>`<tr><td>${reportDetailDate(r.date)}</td><td>${r.hours}</td><td>${r.factor}</td><td class="money-cell">${money(r.amount)}</td></tr>`).join("")}
+       <tr class="total-row"><td>Tổng</td><td>${Number(totalHours.toFixed(2))}</td><td></td><td class="money-cell">${money(totalAmount)}</td></tr>
+     </tbody>
+   </table></div>`;
+ }
+
+ $("reportAttendanceDetailBody").innerHTML=table;
+ $("reportAttendanceDetailModal").classList.add("open");
+}
+
+function bindReportAttendanceDetailRows(){
+ document.querySelectorAll("[data-report-attendance-detail]").forEach(row=>{
+   row.onclick=()=>openReportAttendanceDetail(row.dataset.reportAttendanceDetail);
+ });
+}
+
 function renderReport(){
  $("reportMonthly").classList.toggle("active",reportMode==="month");$("reportYearly").classList.toggle("active",reportMode==="year");
  $("reportPeriodLabel").textContent=reportMode==="month"?pad(reportCursor.getMonth()+1)+"/"+reportCursor.getFullYear():String(reportCursor.getFullYear());
@@ -1723,7 +1945,19 @@ function renderReport(){
    return gap?[`${x.chartColor} ${start}% ${end-gap}%`,`var(--bg) ${end-gap}% ${end}%`]:[`${x.chartColor} ${start}% ${end}%`];
  });
  donut.style.background="conic-gradient("+stops.join(",")+")";
- $("reportList").innerHTML=items.map(x=>`<div class="rrow"><span class="report-swatch" style="--slice-color:${x.chartColor}" aria-hidden="true"></span><div class="ricon" aria-hidden="true">${esc(x.icon)}</div><div class="rname">${esc(x.name)}</div><div class="report-figures"><div class="rval">${money(x.amount)}</div><div class="rpct">${(x.amount/total*100).toFixed(1)} %</div></div></div>`).join("");
+ $("reportList").innerHTML=items.map(x=>{
+   const detailKind=reportTab==="income"
+     ?(x.name==="OT"?"ot":(x.name==="Đi lại"?"travel":(x.name==="Công tác phí"?"ctp":"")))
+     :"";
+   return `<div class="rrow ${detailKind?"report-detail-row":""}" ${detailKind?`data-report-attendance-detail="${detailKind}" title="Xem chi tiết ${esc(x.name)}"`:""}>
+     <span class="report-swatch" style="--slice-color:${x.chartColor}" aria-hidden="true"></span>
+     <div class="ricon" aria-hidden="true">${esc(x.icon)}</div>
+     <div class="rname">${esc(x.name)}</div>
+     <div class="report-figures"><div class="rval">${money(x.amount)}</div><div class="rpct">${(x.amount/total*100).toFixed(1)} %</div></div>
+     <div class="report-detail-arrow">${detailKind?"›":""}</div>
+   </div>`;
+ }).join("");
+ bindReportAttendanceDetailRows();
 }
 
 function fundAmount(f,income){return f.mode==="percent"?income*(Number(f.percent)||0)/100:parseMoney(f.amount)}
@@ -2083,7 +2317,7 @@ function moveBudget(dir){
 }
 
 function backup(){
- const payload={app:"ChamCongFinance",version:28,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
+ const payload={app:"ChamCongFinance",version:29,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
 }
 function restore(file){
  const r=new FileReader();r.onload=()=>{try{const obj=JSON.parse(String(r.result||"")),incoming=obj&&obj.data&&typeof obj.data==="object"?obj.data:obj;if(!incoming||typeof incoming!=="object")throw 0;if(!confirm("Khôi phục dữ liệu từ bản sao lưu này?"))return;data=normalizeData(incoming);bootstrapFundIcons();applyGlobalFundIcons();save();renderAll();alert("Đã khôi phục dữ liệu thành công.")}catch(e){alert("File sao lưu bị lỗi hoặc không đúng định dạng.")}};r.readAsText(file)
@@ -2187,7 +2421,7 @@ bindMoneyInput($("entryAmount"));bindMoneyInput($("salaryMonth"));bindMoneyInput
 document.querySelectorAll("[data-calc]").forEach(b=>b.onclick=()=>calcPress(b.dataset.calc));
 $("calcApply").onclick=()=>{
  if(!calculatorTarget)return closeModal("calculatorModal");
- const value=Math.max(0,Math.round(calcSafeEval(calculatorExpr)));
+ const value=Math.max(0,calcSafeEval(calculatorExpr));
  setMoneyInput(calculatorTarget,value);
  calculatorTarget.dispatchEvent(new Event("input",{bubbles:true}));
  calculatorTarget.dispatchEvent(new Event("change",{bubbles:true}));

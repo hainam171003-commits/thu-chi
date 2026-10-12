@@ -618,6 +618,79 @@ button,.cat-tile,.arrow-btn,.work-day,nav button{touch-action:manipulation;-webk
  nav{max-width:414px!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;padding-bottom:calc(6px + env(safe-area-inset-bottom))!important;height:calc(78px + env(safe-area-inset-bottom))!important}
 }
 </style>
+
+<style id="avatech-iphone11pm-ui">
+/* iPhone 11 Pro Max (414 CSS px): fully visible controls and safe-area bottom spacing. */
+#avatechModal,#reportAttendanceDetailModal{align-items:flex-end}
+#avatechModal .avatech-sheet,#reportAttendanceDetailModal .avatech-sheet{
+  width:min(430px,100%);
+  max-width:100%;
+  max-height:min(86dvh,calc(100dvh - env(safe-area-inset-top) - 12px));
+  padding:14px 16px calc(20px + env(safe-area-inset-bottom));
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.avatech-sheet .sheet-head{position:sticky;top:-14px;z-index:2;background:var(--card);padding:4px 0 10px;min-height:48px;gap:8px}
+.avatech-sheet .close{flex:none;width:42px;height:42px;font-size:24px;touch-action:manipulation}
+.avatech-detail-head{display:grid;grid-template-columns:minmax(92px,auto) minmax(0,1fr) 42px;align-items:center}
+.avatech-detail-head b{font-size:19px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+.avatech-back-btn{min-width:0;min-height:44px;padding:7px 5px 7px 0;border:0;background:transparent;color:var(--accent);font-size:30px;font-weight:650;display:flex;align-items:center;gap:5px;touch-action:manipulation;white-space:nowrap}
+.avatech-back-btn span{font-size:14px;font-weight:650}
+.avatech-sheet .report-detail-period{margin:0 0 14px;font-size:13px}
+.avatech-sheet .avatech-summary{flex-wrap:wrap;gap:5px 10px;align-items:baseline}
+.avatech-sheet .avatech-summary b{margin-left:auto;white-space:nowrap}
+.avatech-sheet .avatech-part{min-height:62px;grid-template-columns:30px minmax(0,1fr) minmax(0,auto) 16px;gap:8px;padding:13px 4px}
+.avatech-sheet .avatech-part .part-money{font-size:14px;white-space:nowrap}
+.avatech-sheet .report-detail-table-wrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.avatech-sheet .report-detail-table{width:100%;min-width:325px;font-size:12px}
+.avatech-sheet .report-detail-table th,.avatech-sheet .report-detail-table td{padding:10px 6px}
+.avatech-sheet .report-detail-table .money-cell{font-variant-numeric:tabular-nums}
+@media (max-width:430px){
+  /* Tôn trọng phần tai thỏ / thanh trạng thái khi chạy dưới dạng PWA trên iPhone. */
+  .screen-head{
+    height:calc(82px + env(safe-area-inset-top)) !important;
+    padding-top:calc(30px + env(safe-area-inset-top)) !important;
+  }
+  .section{padding-left:18px !important;padding-right:18px !important}
+  .app{min-width:0;max-width:414px !important}
+  #avatechModal .avatech-sheet,#reportAttendanceDetailModal .avatech-sheet{
+    width:100%!important;max-width:100%!important;
+    padding-left:clamp(12px,3.8vw,16px);padding-right:clamp(12px,3.8vw,16px);
+  }
+  .report-detail-table th{font-size:11.5px}
+}
+@media (max-width:360px){
+  .avatech-detail-head{grid-template-columns:78px minmax(0,1fr) 42px}
+  .avatech-back-btn span{font-size:12px}
+  .avatech-detail-head b{font-size:17px}
+  .avatech-sheet .report-detail-table{min-width:350px}
+}
+</style>
+
+<style id="reserve-manual-deposit-styles">
+.reserve-add-btn{display:inline-flex;align-items:center;gap:5px;background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--orange);font-size:14px;font-weight:750;margin:10px 0 0 42px;touch-action:manipulation}
+.reserve-add-btn:active{opacity:.8}
+.reserve-deposit-hint{font-size:12px;color:var(--muted);padding:0 0 3px 42px;margin-top:6px}
+.reserve-manual-desc{padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:var(--soft);font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 12px}
+.reserve-deposit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reserve-deposit-field label{display:block;font-size:12px;margin-bottom:5px;color:var(--muted)}
+.reserve-deposit-field input{width:100%;min-width:0;box-sizing:border-box;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:11px 9px;font-size:16px}
+.reserve-deposit-field.wide{grid-column:1/-1}
+.reserve-deposit-save{width:100%;background:var(--orange);color:var(--bg);border:0;border-radius:11px;font-size:16px;font-weight:800;padding:13px;margin:12px 0}
+.reserve-deposit-history-head{font-weight:750;font-size:15px;margin:8px 0}
+.reserve-deposit-item{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding:11px 0}
+.reserve-deposit-item-main{flex:1;min-width:0}
+.reserve-deposit-item-date{font-size:12px;color:var(--muted)}
+.reserve-deposit-item-note{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.reserve-deposit-item-amount{font-weight:750;color:var(--orange);white-space:nowrap}
+.reserve-deposit-remove{border:1px solid var(--border);border-radius:9px;background:var(--soft);color:var(--muted);padding:7px 9px;touch-action:manipulation}
+.reserve-deposit-total{font-size:13px;color:var(--muted);margin:5px 0}
+#reserveDepositModal .sheet{max-width:430px;max-height:calc(100dvh - env(safe-area-inset-top) - 15px);padding-bottom:calc(18px + env(safe-area-inset-bottom));overscroll-behavior:contain}
+@media(max-width:430px){.reserve-add-btn{margin-left:39px;font-size:13px;padding:7px 10px}.reserve-deposit-hint{padding-left:39px}}
+</style>
+
 </head>
 <body class="dark">
 <div class="app">
@@ -764,6 +837,20 @@ button,.cat-tile,.arrow-btn,.work-day,nav button{touch-action:manipulation;-webk
   <div class="modal-actions"><button class="btn btn-soft" id="addCategory">＋ Thêm danh mục</button><button class="btn btn-orange" data-close="categoryModal">Xong</button></div>
 </div></div>
 
+
+<div class="modal" id="reserveDepositModal"><div class="sheet">
+  <div class="sheet-head"><b id="reserveDepositTitle">Nạp tiền quỹ</b><button class="close" type="button" data-close="reserveDepositModal">×</button></div>
+  <div class="reserve-manual-desc">Tiền nạp trực tiếp vào quỹ này, <b>không ghi thành Thu nhập</b> và không tự trừ tiền chi tiêu. Nếu muốn tắt phân bổ theo thu nhập, chọn <b>Thủ công</b> trong phần sửa ngân sách của quỹ.</div>
+  <div class="reserve-deposit-grid">
+    <div class="reserve-deposit-field"><label for="reserveDepositDate">Ngày nạp</label><input id="reserveDepositDate" type="date"></div>
+    <div class="reserve-deposit-field"><label for="reserveDepositAmount">Số tiền (đ)</label><input id="reserveDepositAmount" inputmode="numeric" placeholder="VD: 500.000"></div>
+    <div class="reserve-deposit-field wide"><label for="reserveDepositNote">Ghi chú (không bắt buộc)</label><input id="reserveDepositNote" maxlength="150" placeholder="Nguồn tiền nạp / ghi chú"></div>
+  </div>
+  <button type="button" class="reserve-deposit-save" id="reserveDepositSave">+ Nạp tiền</button>
+  <div class="reserve-deposit-history-head">Các lần nạp trong tháng</div>
+  <div id="reserveDepositHistory"></div>
+</div></div>
+
 <div class="modal" id="budgetModal"><div class="sheet">
   <div class="sheet-head"><b id="budgetModalTitle">Ngân sách</b><button class="close" data-close="budgetModal">×</button></div>
   <div class="modal-grid">
@@ -772,8 +859,9 @@ button,.cat-tile,.arrow-btn,.work-day,nav button{touch-action:manipulation;-webk
       <label>Icon khoản chi</label>
       <div id="budgetIconPicker" class="budget-icon-picker"></div>
     </div>
-    <div class="modal-field"><label>Kiểu</label><select id="budgetMode"><option value="amount">Số tiền (đ)</option><option value="percent">Phần trăm (%)</option></select></div>
-    <div class="modal-field"><label>Giá trị</label><input id="budgetValue" inputmode="decimal"></div>
+    <div class="modal-field"><label>Kiểu</label><select id="budgetMode"><option value="amount">Số tiền (đ)</option><option value="percent">Phần trăm (%)</option><option value="manual" id="budgetManualModeOption" hidden>Thủ công – tự nạp tiền</option></select></div>
+    <div class="modal-field" id="budgetValueField"><label>Giá trị</label><input id="budgetValue" inputmode="decimal"></div>
+    <div class="reserve-manual-desc" style="grid-column:1/-1;display:none" id="budgetManualHint">Chế độ Thủ công: quỹ này sẽ <b>không tự trích % từ Thu nhập</b> trong tháng đang sửa. Số dư đến từ các lần bấm <b>+ Nạp tiền</b>.</div>
   </div>
   <div class="modal-actions"><button class="btn btn-red" id="deleteBudget">Xóa</button><button class="btn btn-soft" id="budgetMoveUp">↑</button><button class="btn btn-soft" id="budgetMoveDown">↓</button><button class="btn btn-orange" id="saveBudget">Lưu</button></div>
 </div></div>
@@ -804,13 +892,17 @@ button,.cat-tile,.arrow-btn,.work-day,nav button{touch-action:manipulation;-webk
 </div></div>
 
 
-<div class="modal" id="avatechModal"><div class="sheet">
-  <div class="sheet-head"><b>🏢 Avatech</b><button type="button" class="close" data-close="avatechModal" aria-label="Đóng">×</button></div>
+<div class="modal" id="avatechModal"><div class="sheet avatech-sheet" role="dialog" aria-modal="true" aria-labelledby="avatechModalTitle">
+  <div class="sheet-head avatech-sheet-head"><b id="avatechModalTitle">🏢 Avatech</b><button type="button" class="close" data-close="avatechModal" aria-label="Đóng Avatech">×</button></div>
   <div class="report-detail-period" id="avatechPeriod"></div>
   <div id="avatechModalContent"></div>
 </div></div>
-<div class="modal" id="reportAttendanceDetailModal"><div class="sheet">
-  <div class="sheet-head"><b id="reportAttendanceDetailTitle">Chi tiết</b><button type="button" class="close" data-close="reportAttendanceDetailModal" aria-label="Đóng">×</button></div>
+<div class="modal" id="reportAttendanceDetailModal"><div class="sheet avatech-sheet avatech-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="reportAttendanceDetailTitle">
+  <div class="sheet-head avatech-detail-head">
+    <button type="button" class="avatech-back-btn" id="reportDetailBack" aria-label="Quay lại danh sách Avatech">‹ <span>Quay lại</span></button>
+    <b id="reportAttendanceDetailTitle">Chi tiết</b>
+    <button type="button" class="close" data-close="reportAttendanceDetailModal" aria-label="Đóng và về Báo cáo">×</button>
+  </div>
   <div class="report-detail-period" id="reportAttendanceDetailPeriod"></div>
   <div id="reportAttendanceDetailBody"></div>
 </div></div>
@@ -886,6 +978,18 @@ function normalizeData(raw){
  out.transactions=Array.isArray(raw.transactions)?raw.transactions:[];
  out.categories=raw.categories&&typeof raw.categories==="object"?raw.categories:{};
  out.fundIcons=raw.fundIcons&&typeof raw.fundIcons==="object"?{...raw.fundIcons}:{};
+ // Nạp quỹ lưu riêng, không đi vào Thu nhập hoặc các giao dịch chi.
+ out.reserveDeposits=(Array.isArray(raw.reserveDeposits)?raw.reserveDeposits:[])
+   .filter(v=>v&&/^\d{4}-\d{2}-\d{2}$/.test(v.date||""))
+   .map((v,i)=>({
+     id:String(v.id||("deposit_"+i+"_"+v.date)),
+     date:String(v.date),
+     fundId:String(v.fundId||""),
+     fundName:String(v.fundName||""),
+     amount:Math.max(0,amountNumber(v.amount)),
+     note:String(v.note||""),
+     createdAt:String(v.createdAt||"")
+   })).filter(v=>v.amount>0);
  out.categories.income=Array.isArray(out.categories.income)&&out.categories.income.length
    ?out.categories.income
    :JSON.parse(JSON.stringify(defaultIncomeCats));
@@ -924,7 +1028,7 @@ function normalizeData(raw){
      categoryId:id, // kept for compatibility with older backups
      icon:String((f&&f.icon)||(legacy&&legacy.icon)||"💼"),
      color:String((f&&f.color)||(legacy&&legacy.color)||palette[i%palette.length]),
-     mode:f&&f.mode==="percent"?"percent":"amount",
+     mode:f&&f.mode==="manual"?"manual":(f&&f.mode==="percent"?"percent":"amount"),
      percent:Number(f&&f.percent)||0,
      amount:parseMoney(f&&f.amount),
      balance:Number(f&&f.balance)||0
@@ -953,7 +1057,7 @@ function normalizeData(raw){
        categoryId:id,
        icon:String((f&&f.icon)||(fallback&&fallback.icon)||"💼"),
        color:String((f&&f.color)||(fallback&&fallback.color)||palette[i%palette.length]),
-       mode:f&&f.mode==="percent"?"percent":"amount",
+       mode:f&&f.mode==="manual"?"manual":(f&&f.mode==="percent"?"percent":"amount"),
        percent:Number(f&&f.percent)||0,
        amount:parseMoney(f&&f.amount),
        balance:Number(f&&f.balance)||0
@@ -1186,15 +1290,31 @@ function actualExpenseForMonth(k){
    .filter(t=>t.type==="expense"&&t.date.slice(0,7)===k&&!isReserveTransaction(t))
    .reduce((s,t)=>s+amountNumber(t.amount),0);
 }
+function isDirectDepositFund(f){
+ const n=normalizeFundName(f&&f.name);
+ return n.includes("tiet kiem")||n.includes("saving")||n.includes("travel")||n.includes("du lich");
+}
+function reserveDepositsForFund(f,mk){
+ return (data.reserveDeposits||[]).filter(v=>v.date.slice(0,7)===mk&&
+   (v.fundId===f.id||(!v.fundId&&normalizeFundName(v.fundName)===normalizeFundName(f.name))));
+}
+function reserveDepositTotal(f,mk){
+ return reserveDepositsForFund(f,mk).reduce((s,v)=>s+amountNumber(v.amount),0);
+}
+// Tiền nạp độc lập được cộng vào số dư, không phải khoản phân bổ từ Thu nhập.
+function reserveFundBalanceBase(f,mk,income){
+ return fundAmount(f,income)+reserveDepositTotal(f,mk);
+}
 function reserveSummaryForMonth(k,income){
  let allocated=0,spent=0,balance=0,committed=0;
  fundsForMonth(k).filter(isReserveFund).forEach(f=>{
-   const amount=fundAmount(f,income);
+   const autoAmount=fundAmount(f,income);
+   const amount=autoAmount+reserveDepositTotal(f,k);
    const used=fundSpent(f,k);
-   allocated+=amount;
+   allocated+=autoAmount;
    spent+=used;
    balance+=Math.max(0,amount-used);
-   committed+=Math.max(amount,used);
+   committed+=Math.max(autoAmount,used);
  });
  return {allocated,spent,balance,committed};
 }
@@ -1680,7 +1800,7 @@ function reserveCarryLedger(targetMk){
    // Vì vậy chi trong tháng không tự trừ phần Để riêng mới của cùng tháng.
    funds.forEach(f=>{
      const key=reserveFundKey(f);
-     const allocated=Math.max(0,fundAmount(f,income));
+     const allocated=Math.max(0,reserveFundBalanceBase(f,k,income));
      lots.push({month:k,key,allocated,remaining:allocated});
    });
  });
@@ -1832,7 +1952,7 @@ function renderReport(){
  if(avatechRow){avatechRow.setAttribute("role","button");avatechRow.setAttribute("tabindex","0");avatechRow.setAttribute("aria-label","Xem chi tiết thu nhập Avatech");avatechRow.onclick=openAvatechDetail;avatechRow.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openAvatechDetail()}}}
 }
 
-function fundAmount(f,income){return f.mode==="percent"?income*(Number(f.percent)||0)/100:parseMoney(f.amount)}
+function fundAmount(f,income){return f.mode==="manual"?0:(f.mode==="percent"?income*(Number(f.percent)||0)/100:parseMoney(f.amount))}
 function fundSpent(f,mk){
  const txs=data.transactions
    .filter(t=>t.type==="expense"&&t.date.slice(0,7)===mk&&t.categoryId===f.id);
@@ -1869,7 +1989,7 @@ function reserveAllocatedForMonth(k){
 function reserveBalanceForBudgetMonth(budgetMk){
  const income=incomeForMonth(budgetMk);
  return fundsForMonth(budgetMk).filter(isReserveFund).reduce((s,f)=>
-   s+Math.max(0,fundAmount(f,income)-budgetFundSpent(f,budgetMk)),0);
+   s+Math.max(0,reserveFundBalanceBase(f,budgetMk,income)-budgetFundSpent(f,budgetMk)),0);
 }
 function isQuarterMarkedFund(f){const n=normalizeFundName(f&&f.name);return n==="date"||n==="xang dau"}
 
@@ -1882,7 +2002,8 @@ function renderBudget(){
  const monthFunds=fundsForMonth(mk);
  const rows=monthFunds.map((f,i)=>{
    const reserve=isReserveFund(f);
-   const amount=fundAmount(f,currentIncome);
+   const autoAmount=fundAmount(f,currentIncome);
+   const amount=reserve?reserveFundBalanceBase(f,mk,currentIncome):autoAmount;
    const spent=budgetFundSpent(f,mk);
    const left=amount-spent;
    // Travel / Tiết kiệm / Dự phòng là tiền đã để riêng:
@@ -1890,7 +2011,7 @@ function renderBudget(){
    const pct=amount>0
      ?Math.min(100,Math.max(0,(reserve?Math.max(0,left):spent)/amount*100))
      :0;
-   allocatedTotal+=amount;
+   allocatedTotal+=autoAmount;
 
    return `<div class="budget-row ${reserve?"reserve-budget-row":""} ${isQuarterMarkedFund(f)?"quarter-budget-row":""}" data-budget="${i}">
      <div class="budget-row-top">
@@ -1917,6 +2038,8 @@ function renderBudget(){
        </div>
        <div class="budget-chevron">›</div>
      </div>
+     ${isDirectDepositFund(f)?`<button type="button" class="reserve-add-btn" data-reserve-add="${i}">＋ Nạp tiền vào ${esc(f.name)}</button>
+     <div class="reserve-deposit-hint">${f.mode==="manual"?"Thủ công · Không tự trích từ thu nhập":("Đã nạp ngoài thu nhập: "+money(reserveDepositTotal(f,mk)))}</div>`:""}
    </div>`;
  }).join("");
 
@@ -1938,6 +2061,9 @@ function renderBudget(){
   :(allocationGap<0?"Phân bổ vượt Income: "+money(Math.abs(allocationGap))+" · "+gapPct.toFixed(2)+"%":"");
 
  document.querySelectorAll("[data-budget]").forEach(r=>r.onclick=()=>openBudgetModal(+r.dataset.budget));
+ document.querySelectorAll("[data-reserve-add]").forEach(b=>b.onclick=e=>{
+   e.preventDefault();e.stopPropagation();openReserveDeposit(+b.dataset.reserveAdd);
+ });
 }
 function openTxModal(id){
  const t=data.transactions.find(x=>x.id===id);if(!t)return;editingTxId=id;
@@ -2030,6 +2156,67 @@ function renderBudgetIconPicker(){
  });
 }
 
+let depositFundIndex=-1;
+function syncBudgetManualMode(){
+ const eligible=isDirectDepositFund({name:$("budgetName").value});
+ const option=$("budgetManualModeOption");
+ option.hidden=!eligible;
+ option.disabled=!eligible;
+ if(!eligible&&$("budgetMode").value==="manual")$("budgetMode").value="amount";
+ const isManual=$("budgetMode").value==="manual";
+ $("budgetValueField").style.display=isManual?"none":"";
+ $("budgetManualHint").style.display=isManual?"block":"none";
+}
+function openReserveDeposit(index){
+ const mk=mkey(budgetCursor.getFullYear(),budgetCursor.getMonth());
+ const fund=fundsForMonth(mk)[index];
+ if(!fund||!isDirectDepositFund(fund))return;
+ depositFundIndex=index;
+ $("reserveDepositTitle").textContent="Nạp tiền · "+fund.name;
+ const now=todayKey();
+ $("reserveDepositDate").value=now.slice(0,7)===mk?now:mk+"-01";
+ $("reserveDepositDate").min=mk+"-01";
+ const [yy,mm]=mk.split("-").map(Number);
+ $("reserveDepositDate").max=mk+"-"+pad(dim(yy,mm-1));
+ $("reserveDepositAmount").value="";
+ $("reserveDepositNote").value="";
+ renderReserveDepositHistory();
+ $("reserveDepositModal").classList.add("open");
+}
+function renderReserveDepositHistory(){
+ const mk=mkey(budgetCursor.getFullYear(),budgetCursor.getMonth());
+ const fund=fundsForMonth(mk)[depositFundIndex];
+ if(!fund)return;
+ const deposits=reserveDepositsForFund(fund,mk).slice().sort((a,b)=>b.date.localeCompare(a.date));
+ const total=deposits.reduce((s,v)=>s+v.amount,0);
+ $("reserveDepositHistory").innerHTML=`<div class="reserve-deposit-total">Đã nạp thủ công: <b>${money(total)}</b> (${deposits.length} lần)</div>`+
+ (deposits.length?deposits.map(v=>`<div class="reserve-deposit-item">
+   <div class="reserve-deposit-item-main"><div class="reserve-deposit-item-date">${displayDate(v.date)}</div>${v.note?`<div class="reserve-deposit-item-note">${esc(v.note)}</div>`:""}</div>
+   <div class="reserve-deposit-item-amount">+${money(v.amount)}</div>
+   <button type="button" class="reserve-deposit-remove" data-reserve-delete="${esc(v.id)}" aria-label="Xóa khoản nạp">Xóa</button>
+ </div>`).join(""):'<div class="small">Tháng này chưa nạp tiền.</div>');
+ $("reserveDepositHistory").querySelectorAll("[data-reserve-delete]").forEach(b=>b.onclick=()=>{
+   if(!confirm("Xóa khoản nạp này khỏi quỹ?"))return;
+   data.reserveDeposits=data.reserveDeposits.filter(v=>v.id!==b.dataset.reserveDelete);
+   save();renderReserveDepositHistory();renderBudget();renderReport();
+ });
+}
+function saveReserveDeposit(){
+ const mk=mkey(budgetCursor.getFullYear(),budgetCursor.getMonth());
+ const f=fundsForMonth(mk)[depositFundIndex];
+ if(!f||!isDirectDepositFund(f))return;
+ const date=$("reserveDepositDate").value;
+ const amount=parseMoney($("reserveDepositAmount").value);
+ const note=$("reserveDepositNote").value.trim();
+ if(!date||date.slice(0,7)!==mk)return alert("Vui lòng chọn ngày trong tháng ngân sách đang xem.");
+ if(!Number.isFinite(amount)||amount<=0)return alert("Nhập số tiền nạp hợp lệ.");
+ data.reserveDeposits.push({id:uid(),date,fundId:f.id,fundName:f.name,amount,note,createdAt:new Date().toISOString()});
+ save();
+ $("reserveDepositAmount").value="";
+ $("reserveDepositNote").value="";
+ renderReserveDepositHistory();
+ renderBudget();renderReport();
+}
 function openBudgetModal(index){
  editingBudgetIndex=index;
  const mk=mkey(budgetCursor.getFullYear(),budgetCursor.getMonth());
@@ -2044,6 +2231,7 @@ function openBudgetModal(index){
  $("budgetName").value=f.name;
  $("budgetMode").value=f.mode;
  $("budgetValue").value=f.mode==="percent"?(Number(f.percent)||0):(parseMoney(f.amount)||"");
+ syncBudgetManualMode();
  renderBudgetIconPicker();
  $("deleteBudget").style.visibility=isNew?"hidden":"visible";
  $("budgetMoveUp").style.visibility=isNew?"hidden":"visible";
@@ -2085,7 +2273,8 @@ function syncFundIcon(id,icon,name,oldName){
 function saveBudgetEdit(){
  const mk=mkey(budgetCursor.getFullYear(),budgetCursor.getMonth());
  const arr=ensureBudgetMonth(mk);
- const mode=$("budgetMode").value;
+ const candidateName=$("budgetName").value.trim()||"Quỹ";
+ const mode=$("budgetMode").value==="manual"&&isDirectDepositFund({name:candidateName})?"manual":$("budgetMode").value;
  const val=Number(String($("budgetValue").value).replace(",","."))||0;
  const name=$("budgetName").value.trim()||"Quỹ";
  const iconOldName=editingBudgetIndex>=0&&arr[editingBudgetIndex]?arr[editingBudgetIndex].name:"";
@@ -2148,7 +2337,7 @@ function moveBudget(dir){
 }
 
 function backup(){
- const payload={app:"ChamCongFinance",version:19,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
+ const payload={app:"ChamCongFinance",version:21,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(data))},text=JSON.stringify(payload,null,2);JSON.parse(text);downloadBlob(text,"cham-cong-backup-"+todayKey()+".json","application/json;charset=utf-8");
 }
 function restore(file){
  const r=new FileReader();r.onload=()=>{try{const obj=JSON.parse(String(r.result||"")),incoming=obj&&obj.data&&typeof obj.data==="object"?obj.data:obj;if(!incoming||typeof incoming!=="object")throw 0;if(!confirm("Khôi phục dữ liệu từ bản sao lưu này?"))return;data=normalizeData(incoming);bootstrapFundIcons();applyGlobalFundIcons();save();renderAll();alert("Đã khôi phục dữ liệu thành công.")}catch(e){alert("File sao lưu bị lỗi hoặc không đúng định dạng.")}};r.readAsText(file)
@@ -2227,7 +2416,12 @@ $("reportMonthly").onclick=()=>{reportMode="month";renderReport()};$("reportYear
 $("reportPrev").onclick=()=>{reportMode==="month"?reportCursor.setMonth(reportCursor.getMonth()-1):reportCursor.setFullYear(reportCursor.getFullYear()-1);renderReport()};$("reportNext").onclick=()=>{reportMode==="month"?reportCursor.setMonth(reportCursor.getMonth()+1):reportCursor.setFullYear(reportCursor.getFullYear()+1);renderReport()};
 $("reportTabExpense").onclick=()=>{reportTab="expense";renderReport()};$("reportTabIncome").onclick=()=>{reportTab="income";renderReport()};
 $("budgetPrev").onclick=()=>{budgetCursor.setMonth(budgetCursor.getMonth()-1);renderBudget()};$("budgetNext").onclick=()=>{budgetCursor.setMonth(budgetCursor.getMonth()+1);renderBudget()};
-$("addBudget").onclick=()=>openBudgetModal(-1);$("saveBudget").onclick=saveBudgetEdit;$("deleteBudget").onclick=deleteBudget;$("budgetMoveUp").onclick=()=>moveBudget(-1);$("budgetMoveDown").onclick=()=>moveBudget(1);
+$("addBudget").onclick=()=>openBudgetModal(-1);$("saveBudget").onclick=saveBudgetEdit;
+$("budgetName").addEventListener("input",syncBudgetManualMode);
+$("budgetMode").addEventListener("change",syncBudgetManualMode);
+$("reserveDepositSave").onclick=saveReserveDeposit;
+bindMoneyInput($("reserveDepositAmount"));
+attachMoneyCalculator($("reserveDepositAmount"));$("deleteBudget").onclick=deleteBudget;$("budgetMoveUp").onclick=()=>moveBudget(-1);$("budgetMoveDown").onclick=()=>moveBudget(1);
 $("saveTxEdit").onclick=saveTxEdit;$("deleteTx").onclick=deleteTx;
 $("catTabIncome").onclick=()=>{catManageType="income";renderCategoryManager()};
 $("catTabExpense").onclick=()=>{closeModal("categoryModal");switchPage("budget")};
@@ -2241,6 +2435,11 @@ function applyTheme(dark){
  document.querySelector('meta[name="theme-color"]').content=dark?"#050a07":"#f4faf6";
 }
 $("themeToggle").onclick=()=>{const dark=!document.body.classList.contains("dark");applyTheme(dark);localStorage.setItem("cham_cong_neon_dark",dark?"1":"0")};
+// Detail -> Avatech -> Report. The back button only closes the detail level.
+$("reportDetailBack").onclick=()=>{
+ closeModal("reportAttendanceDetailModal");
+ openAvatechDetail();
+};
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>closeModal(b.dataset.close));
 document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id)}));
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>switchPage(b.dataset.page));

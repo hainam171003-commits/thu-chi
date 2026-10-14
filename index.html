@@ -748,6 +748,24 @@ button,.cat-tile,.arrow-btn,.work-day,nav button{touch-action:manipulation;-webk
 }
 </style>
 
+
+<style id="entry-budget-balance-css">
+/* Dòng số dư nhỏ dưới Tiền chi, không làm hẹp ô nhập tiền trên iPhone. */
+#entryBudgetBalance{
+  box-sizing:border-box;
+  width:100%;
+  min-height:24px;
+  padding:4px 30px 0 0;
+  text-align:right;
+  font-size:12px;
+  font-weight:600;
+  line-height:1.4;
+  color:var(--muted);
+  overflow-wrap:break-word;
+}
+#entryBudgetBalance .balance-value{color:var(--accent);font-variant-numeric:tabular-nums}
+#entryBudgetBalance.is-negative .balance-value{color:var(--red)}
+</style>
 </head>
 <body class="dark">
 <div class="app">
@@ -780,6 +798,7 @@ button,.cat-tile,.arrow-btn,.work-day,nav button{touch-action:manipulation;-webk
       </div>
       <div class="currency">đ</div>
     </div>
+    <div class="entry-budget-balance" id="entryBudgetBalance" aria-live="polite" style="display:none"></div>
 
     <div class="category-title">Danh mục</div>
     <div class="category-grid" id="categoryGrid"></div>
@@ -1589,6 +1608,34 @@ function keepViewportStable(fn){
  requestAnimationFrame(()=>{if(Math.abs((window.scrollY||0)-y)>1)window.scrollTo(0,y);
   requestAnimationFrame(()=>{if(Math.abs((window.scrollY||0)-y)>1)window.scrollTo(0,y)})});
 }
+function updateEntryBudgetBalance(){
+ const label=$("entryBudgetBalance");
+ if(entryMode!=="expense"){
+   label.style.display="none";
+   label.textContent="";
+   label.classList.remove("is-negative");
+   return;
+ }
+
+ // Khoản chi của tháng này trừ ngân sách tháng trước như mục Ngân sách.
+ const budgetMk=previousMonthKey(entryDate.slice(0,7));
+ const selected=fundsForMonth(entryDate.slice(0,7)).find(f=>f.id===selectedCategoryId);
+ const funds=fundsForMonth(budgetMk);
+ const fund=selected&&(funds.find(f=>f.id===selected.id)||
+   funds.find(f=>normalizeFundName(f.name)===normalizeFundName(selected.name)));
+ const [year,month]=budgetMk.split("-");
+ label.style.display="block";
+ if(!fund){
+   label.textContent="Chưa có quỹ tương ứng trong ngân sách "+month+"/"+year;
+   label.classList.remove("is-negative");
+   return;
+ }
+ const income=incomeForMonth(budgetMk);
+ const limit=isReserveFund(fund)?reserveFundBalanceBase(fund,budgetMk,income):fundAmount(fund,income);
+ const remaining=limit-budgetFundSpent(fund,budgetMk);
+ label.classList.toggle("is-negative",remaining<0);
+ label.innerHTML="Số dư quỹ "+month+"/"+year+": <span class=\"balance-value\">"+money(remaining)+"</span>";
+}
 function renderEntry(){
  $("modeIncome").classList.toggle("active",entryMode==="income");
  $("modeExpense").classList.toggle("active",entryMode==="expense");
@@ -1598,6 +1645,7 @@ function renderEntry(){
 
  const cats=entryMode==="expense"?fundsForMonth(entryDate.slice(0,7)):(data.categories.income||[]);
  if(!cats.some(c=>c.id===selectedCategoryId))selectedCategoryId=cats[0]?.id||"";
+ updateEntryBudgetBalance();
 
  $("categoryGrid").innerHTML=cats.map(c=>`<button class="cat-tile ${c.id===selectedCategoryId?"selected":""}" data-cat="${esc(c.id)}">
    <span class="cat-icon">${esc(c.icon||"💼")}</span>
